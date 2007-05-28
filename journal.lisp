@@ -96,6 +96,30 @@
   (call-next-method))
 
 
+(defun fixup-markdown-output (markup)
+  ;; No, cl-markdown is certainly not perfect.
+  ;;
+  ;; First, convert "<a ...> bla</a>" into " <a ...>bla</a>" (note the
+  ;; excess space to the right of the opening tag in the unprocessed
+  ;; string, which we move to the left of the same opening tag, where we
+  ;; expect it to make more sense in the general case).
+  (loop
+     for matches = (ppcre:all-matches "<a [^>]*?> " markup)
+     while (not (null matches))
+     do (progn
+          (setf markup #+nil
+                (delete-if (constantly t)
+                           markup
+                           :start (1- (second matches))
+                           :end (second matches))
+                (replace markup markup :start1 (1+ (first matches))
+                                       :end1 (second matches)
+                                       :start2 (first matches)
+                                       :end2 (1- (second matches))))
+          (setf (elt markup (first matches)) #\Space)))
+  markup)
+
+
 (defun journal-markup->html (markup)
   (if (string= "" markup)
       markup
@@ -109,13 +133,14 @@
                        (with-output-to-string (s)
                          (system::pretty-print-condition c s)))
                 (invoke-restart 'return nil))))
-        (with-output-to-string (s)
-          ;; Normally, we shouldn't need to create our own stream to
-          ;; write into, but this is, of course, yet another
-          ;; CLISP/Markdown hack, because Markdown's default
-          ;; *OUTPUT-STREAM* seems to spontaneously close itself, making
-          ;; everything break when Markdown tries to render more stuff.
-          (markdown markup :stream s)))))
+        (fixup-markdown-output
+         (with-output-to-string (s)
+           ;; Normally, we shouldn't need to create our own stream to
+           ;; write into, but this is, of course, yet another
+           ;; CLISP/Markdown hack, because Markdown's default
+           ;; *OUTPUT-STREAM* seems to spontaneously close itself, making
+           ;; everything break when Markdown tries to render more stuff.
+           (markdown markup :stream s))))))
 
 
 (defun read-journal-entry (filename)
