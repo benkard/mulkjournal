@@ -40,13 +40,18 @@
 (defparameter *query*
   (mapcan #'(lambda (param)
               (list (keywordify param)
-                    (http-query-parameter param)))
+                    (ext:convert-string-from-bytes
+                     (ext:convert-string-to-bytes
+                      (http-query-parameter param)
+                      charset:iso-8859-1)
+                     charset:utf-8)))
           (http-query-parameter-list))
   "The HTTP query string transformed into a property list.")
 
 (defparameter *action*
   (keywordify (getf *query* :action))
-  "One of NIL, :INDEX, :VIEW-ATOM-FEED, :VIEW, :POST, :EDIT, and :PREVIEW.")
+  "One of NIL, :INDEX, :VIEW-ATOM-FEED, :VIEW, :POST, :EDIT, :PREVIEW,
+   and :POST-COMMENT.")
 
 (defparameter *post-number*
   (parse-integer (getf *query* :post "")
@@ -71,6 +76,9 @@
   ((id :type (integer 0)
        :accessor id-of
        :initarg :id)
+   (file :type (or null pathname)
+         :accessor file-of
+         :initarg :file)
    (title :type string
           :accessor title-of
           :initarg :title
@@ -197,7 +205,7 @@
                                      'journal-comment
                                      comment-record))
                           (second comments)))))
-        (apply #'make-instance 'journal-entry data)))))
+        (apply #'make-instance 'journal-entry :file filename data)))))
 
 
 (defun read-journal-entries ()
@@ -274,7 +282,7 @@ after another in any arbitrary order."
                    ("^%mon"          (values "~D" mon  4))
                    ("^%yr"           (values "~D" yr   3))
                    ("^%sec"          (values "~D" sec  4))
-                   ("^%min"          (values "~D" min  4))
+                   ("^%min"          (values "~2,'0D" min  4))
                    ("^%hr"           (values "~D" hr   3)))
                (when first-match-p
                  (format out (subseq date-control-string 0 start))
@@ -291,15 +299,16 @@ after another in any arbitrary order."
   (http-send-headers))
 
 
-(defun render-comment-body (text)
-  (loop for last-position = 0 then (cadr matches)
-        for matches = (ppcre:all-matches "(\\n|\\r|\\r\\n)(\\n|\\r|\\r\\n)+"
-                                      text)
-                    then (cddr matches)
-        while (not (endp matches))
-        do (<:p (<:as-html (subseq text last-position (car matches))))
-        finally
-          (<:p (<:as-html (subseq text last-position)))))
+(let ((scanner (ppcre:create-scanner "(\\n|\\r|\\r\\n)(\\n|\\r|\\r\\n)+")))
+  (defun render-comment-body (text)
+    (loop for last-position = 0 then (cadr matches)
+          for matches = (ppcre:all-matches scanner
+                                           text)
+          then (cddr matches)
+          while (not (endp matches))
+          do (<:p (<:as-html (subseq text last-position (car matches))))
+          finally
+            (<:p (<:as-html (subseq text last-position))))))
 
 
 (defun show-journal-entry (journal-entry &key (comments-p nil))
@@ -331,7 +340,6 @@ after another in any arbitrary order."
                :name "post"
                :value (prin1-to-string (id-of journal-entry)))
       (<:button :type "submit"
-                ;;:style "display: inline;"
                 (<:as-is "L&ouml;schen")))
      " | "
      (<:form :class :journal-entry-delete-button-form
@@ -345,7 +353,6 @@ after another in any arbitrary order."
                :name "post"
                :value (prin1-to-string (id-of journal-entry)))
       (<:button :type "submit"
-                ;;:style "display: inline;"
                 (<:as-is "Bearbeiten")))
      #+nil
      (<:a :href (format nil
@@ -362,7 +369,9 @@ after another in any arbitrary order."
   (when (and comments-p (not (null (comments-about journal-entry))))
     (<:div :class :journal-comments
      (<:h2 "Kommentare")
-     (dolist (comment (comments-about journal-entry))
+     (dolist (comment (sort (copy-list (comments-about journal-entry))
+                            #'<
+                            :key #'date-of))
        (with-slots (author body date id email website)
            comment
          (<:div :class :journal-comment
@@ -373,7 +382,48 @@ after another in any arbitrary order."
             (<:as-html (format nil "~A" author)))
            (<:as-html " meint: "))
           (<:div :class :journal-comment-body
-           (<:as-html (render-comment-body body)))))))))
+           (<:as-html (render-comment-body body))))))))
+
+  (when comments-p
+    (<:div :class :journal-new-comment
+     (<:h2 "Neuen Kommentar schreiben")
+     (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
+                    ver&ouml;ffentlicht werden und nur von Matthias eingesehen
+                    werden k&ouml;nnen."))
+     (<:form :action "journal.cgi"
+             :method "POST"
+             :accept-charset "UTF-8"
+      (<:input :type "hidden"
+               :name "post"
+               :value (prin1-to-string (id-of journal-entry)))
+      (<:input :type "hidden"
+               :name "action"
+               :value "post-comment")
+      (<:div :style "display: table"; width: 100%"
+       (loop for (name . desc) in '(("author" . "Name (n&ouml;tig)")
+                                    ("email" . "E-Mail")
+                                    ("website" . "Website"))
+             do (<:div :style "display: table-row"
+                 (<:div :style "display: table-cell; vertical-align: top"
+                  (<:label :for name
+                           :style "vertical-align: top"
+                   (<:as-is (format nil "~A: " desc))))
+                 (<:div :style "display: table-cell;"
+                  (<:input :type "text"
+                           :name name
+                           :id name))))
+       (<:div :style "display: table-row"
+        (<:div :style "display: table-cell; vertical-align: top"
+         (<:label :for "comment-body"
+                  :style "vertical-align: top"
+          (<:as-html "Kommentar: ")))
+        (<:div :style "display: table-cell"
+         (<:textarea :name "comment-body"
+                     :id "comment-body"
+                     :rows 10
+                     :cols 40))))
+      (<:button :type "submit"
+       (<:as-is "Ver&ouml;ffentlichen"))))))
 
 
 (defun show-web-journal ()
@@ -384,7 +434,7 @@ after another in any arbitrary order."
    (<:head
     (<:title
      (<:as-html
-      (if (member *action* '(:view :edit :preview))
+      (if (member *action* '(:view :edit :preview :post-comment))
           (format nil "~A -- Kompottkins Weisheiten"
                   (title-of (find-entry *post-number*)))
           "Kompottkins Weisheiten")))
@@ -400,8 +450,10 @@ after another in any arbitrary order."
     (<:div :id :contents
      (case *action*
        ((:index nil)
-        (mapc #'show-journal-entry *journal-entries*))
-       ((:view)
+        (mapc #'show-journal-entry (sort (copy-list *journal-entries*)
+                                         #'>
+                                         :key #'date-of)))
+       ((:view :post-comment)
         (show-journal-entry (find-entry *post-number*) :comments-p t)))))
     (<:div :id :navigation)
 
@@ -418,11 +470,51 @@ after another in any arbitrary order."
            (<:pre (<:as-html (prin1-to-string y)))))))
 
 
+(defun write-out-entry (entry)
+  (assert (file-of entry))
+  (with-open-file (out (file-of entry) :direction :output
+                                       :if-exists :supersede
+                                       :external-format #+clisp charset:utf-8
+                                                        #+sbcl :utf-8)
+    (with-slots (id date last-modification body title categories comments)
+        entry
+      (write `(:id ,id
+               :date ,date
+               :last-modification ,last-modification
+               :title ,title
+               :categories ,categories
+               :body ,body
+               :comments ,(loop for comment in comments
+                             collect
+                               (with-slots (id date author body email website)
+                                   comment
+                                 `(:id ,id
+                                   :date ,date
+                                   :author ,author
+                                   :email ,email
+                                   :website ,website
+                                   :body ,body))))
+             :stream out))))
+
+
 (defun main ()
   (let ((*journal-entries* (read-journal-entries)))
     (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
                                             :charset charset:utf-8)))
       (case *action*
+        (:post-comment   (let ((entry (find-entry *post-number*)))
+                           (push (make-instance 'journal-comment
+                                  :id (1+ (reduce #'max (comments-about entry)
+                                                  :key #'id-of
+                                                  :initial-value -1))
+                                  :date    (get-universal-time)
+                                  :author  (getf *query* :author)
+                                  :email   (getf *query* :email)
+                                  :website (getf *query* :website)
+                                  :body    (getf *query* :comment-body))
+                                 (comments-about entry))
+                           (write-out-entry entry))
+                         (show-web-journal))
         (:view-atom-feed (show-atom-feed))
         (otherwise       (show-web-journal))))))
 
