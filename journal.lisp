@@ -444,13 +444,14 @@ after another in any arbitrary order."
      (<:h1 :id :main-title
            (<:a :href "journal.cgi?action=index"
                 "Kompottkins Weisheiten"))
-     (<:div :id :main-subtitle (<:as-is
-                                (random-elt
-                                 '(("Geschwafel eines
-                                     libert&auml;rsozialistischen Geeks")
-                                   ("NEU!  Jetzt ohne regelm&auml;&szlig;ige
-                                     Serverabst&uuml;rze!")
-                                   ("NEU!  Jetzt mit mehr als 3 % Uptime!"))))))
+     (<:div :id :main-subtitle
+      (<:as-is "&bull;&bull;&bull; ")
+      (<:as-is
+       (random-elt
+        '("Geschwafel eines libert&auml;rsozialistischen Geeks"
+          "NEU!  Jetzt ohne regelm&auml;&szlig;ige Serverabst&uuml;rze!"
+          "NEU!  Jetzt mit mehr als 3 % Uptime!")))
+      (<:as-is " &bull;&bull;&bull;")))
     (<:div :id :contents
      (case *action*
        ((:index nil)
