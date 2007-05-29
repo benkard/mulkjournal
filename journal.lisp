@@ -399,7 +399,7 @@ after another in any arbitrary order."
       (<:input :type "hidden"
                :name "action"
                :value "post-comment")
-      (<:div :style "display: table"; width: 100%"
+      (<:div :style "display: table"
        (loop for (name . desc) in '(("author" . "Name (n&ouml;tig)")
                                     ("email" . "E-Mail")
                                     ("website" . "Website"))
