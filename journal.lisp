@@ -78,6 +78,10 @@
    (date :type (integer 0)
          :accessor date-of
          :initarg :date)
+   (last-modification :type (or null (integer 0))
+                      :accessor last-modification-of
+                      :initarg :last-modification
+                      :initform nil)
    (body :type string
          :accessor body-of
          :initarg :body
