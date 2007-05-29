@@ -445,8 +445,12 @@ after another in any arbitrary order."
            (<:a :href "journal.cgi?action=index"
                 "Kompottkins Weisheiten"))
      (<:div :id :main-subtitle (<:as-is
-                                "NEU! Jetzt ohne regelm&auml;&szlig;ige
-                                 Serverabst&uuml;rze!")))
+                                (random-elt
+                                 '(("Geschwafel eines
+                                     libert&auml;rsozialistischen Geeks")
+                                   ("NEU!  Jetzt ohne regelm&auml;&szlig;ige
+                                     Serverabst&uuml;rze!")
+                                   ("NEU!  Jetzt mit mehr als 3 % Uptime!"))))))
     (<:div :id :contents
      (case *action*
        ((:index nil)
@@ -498,7 +502,8 @@ after another in any arbitrary order."
 
 
 (defun main ()
-  (let ((*journal-entries* (read-journal-entries)))
+  (let ((*journal-entries* (read-journal-entries))
+        (*random-state* (make-random-state t)))
     (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
                                             :charset charset:utf-8)))
       (case *action*
