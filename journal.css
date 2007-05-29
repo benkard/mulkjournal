@@ -1,0 +1,57 @@
+#MAIN-TITLE {
+  font-stretch: wider;
+  font-variant: small-caps;
+  text-align: center;
+}
+
+#MAIN-TITLE a {
+  text-decoration: none;
+}
+
+#MAIN-SUBTITLE {
+  text-align: center;
+}
+
+#MAIN-TITLE-BOX {
+}
+
+.JOURNAL-ENTRY-HEADER {
+  font-size: x-small;
+  color: #444;
+  font-weight: lighter;
+  text-align: left;
+}
+
+div.JOURNAL-ENTRY > h2 {
+  border-bottom: 2px solid #000;
+  //font-variant: small-caps;
+}
+
+.JOURNAL-ENTRY > h2 > a {
+  text-decoration: none;
+}
+
+div.JOURNAL-ENTRY {
+  border: 3px outset #666;
+  background-color: #f8f8e0;
+  margin: 1em 0 0 0;
+  padding: 0 0.3em 0 0.3em;
+  text-align: justify;
+}
+
+div.JOURNAL-ENTRY-BODY p {
+  text-indent: 1em;
+}
+
+img.JOURNAL-ENTRY-PORTRAIT {
+  margin-right: 6px;
+  margin-bottom: 6px;
+  float: left;
+}
+
+.JOURNAL-ENTRY-FOOTER {
+    font-size: small;
+    padding-top: 0.5em;
+    text-align: right;
+    clear: both;
+}

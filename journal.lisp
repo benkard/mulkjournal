@@ -89,7 +89,11 @@
    (categories :type list
                :accessor categories-of
                :initarg :categories
-               :initform '())))
+               :initform '())
+   (comments :type list
+             :accessor comments-about
+             :initarg :comments
+             :initform '())))
 
 
 (defmethod shared-initialize ((journal-entry journal-entry) slot-names
@@ -256,12 +260,60 @@ after another in any arbitrary order."
 
 (defun show-journal-entry (journal-entry)
   (<:div :class :journal-entry
-   (<:h2 (<:as-html (title-of journal-entry)))
-    (<:div :class :journal-entry-date
-     (<:as-html
-      (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%min."
-                   (date-of journal-entry))))
-    (<:as-is (journal-markup->html (body-of journal-entry)))))
+   (<:h2 (<:a :href (format nil
+                            "journal.cgi?action=view&post=~D"
+                            (id-of journal-entry))
+              (<:as-html (title-of journal-entry))))
+    (<:div :class :journal-entry-header
+     (<:span :class :journal-entry-date
+      (<:as-html
+       (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%min."
+                    (date-of journal-entry))))
+     (unless (null (categories-of journal-entry))
+       (<:span :class :journal-entry-category
+        (<:as-html
+         (format nil "Abgeheftet unter ...")))))
+    (<:div :class :journal-entry-body
+     (<:as-is (journal-markup->html (body-of journal-entry))))
+    (<:div :class :journal-entry-footer
+     (<:form :class :journal-entry-delete-button-form
+             :style "display: inline;"
+             :method "DELETE"
+             :action "journal.cgi"
+      (<:input :type "hidden"
+               :name "action"
+               :value "delete")
+      (<:input :type "hidden"
+               :name "post"
+               :value (prin1-to-string (id-of journal-entry)))
+      (<:button :type "submit"
+                ;;:style "display: inline;"
+                (<:as-is "L&ouml;schen")))
+     " | "
+     (<:form :class :journal-entry-delete-button-form
+             :style "display: inline;"
+             :method "GET"
+             :action "journal.cgi"
+      (<:input :type "hidden"
+               :name "action"
+               :value "edit")
+      (<:input :type "hidden"
+               :name "post"
+               :value (prin1-to-string (id-of journal-entry)))
+      (<:button :type "submit"
+                ;;:style "display: inline;"
+                (<:as-is "Bearbeiten")))
+     #+nil
+     (<:a :href (format nil
+                        "journal.cgi?action=edit&post=~D"
+                        (id-of journal-entry))
+          (<:as-is "Bearbeiten"))
+     " | "
+     (<:a :href (format nil
+                        "journal.cgi?action=view&post=~D"
+                        (id-of journal-entry))
+          (<:as-is
+           (format nil "~D Kommentare" (length (comments-about journal-entry))))))))
 
 
 (defun show-web-journal ()
@@ -275,9 +327,16 @@ after another in any arbitrary order."
       (if (member *action* '(:view :edit :preview))
           (format nil "~A -- Kompottkins Weisheiten"
                   (title-of (find-entry *post-number*)))
-          "Kompottkins Weisheiten"))))
+          "Kompottkins Weisheiten")))
+    (<:link :rel "stylesheet" :type "text/css" :href "../journal.css"))
    (<:body
-    (<:h1 :id :main-title "Kompottkins Weisheiten")
+    (<:div :id :main-title-box
+     (<:h1 :id :main-title
+           (<:a :href "journal.cgi?action=index"
+                "Kompottkins Weisheiten"))
+     (<:div :id :main-subtitle (<:as-is
+                                "NEU! Jetzt ohne regelm&auml;&szlig;ige
+                                 Serverabst&uuml;rze!")))
     (<:div :id :contents
      (case *action*
        ((:index nil)
