@@ -302,7 +302,7 @@ after another in any arbitrary order."
           (<:p (<:as-html (subseq text last-position)))))
 
 
-(defun show-journal-entry (journal-entry &key (comments nil))
+(defun show-journal-entry (journal-entry &key (comments-p nil))
   (<:div :class :journal-entry
    (<:h2 (<:a :href (format nil
                             "journal.cgi?action=view&post=~D"
@@ -359,7 +359,7 @@ after another in any arbitrary order."
           (<:as-is
            (format nil "~D Kommentare" (length (comments-about journal-entry)))))))
 
-  (when (not (null (comments-about journal-entry)))
+  (when (and comments-p (not (null (comments-about journal-entry))))
     (<:div :class :journal-comments
      (<:h2 "Kommentare")
      (dolist (comment (comments-about journal-entry))
@@ -368,8 +368,7 @@ after another in any arbitrary order."
          (<:div :class :journal-comment
           (<:div :class :journal-comment-header
            (<:as-html (format nil "(~A) "
-                              (format-date nil "%day.%mon.%yr, %hr:%min" date)
-                              author))
+                              (format-date nil "%day.%mon.%yr, %hr:%min" date)))
            (<:a :href website
             (<:as-html (format nil "~A" author)))
            (<:as-html " meint: "))
@@ -401,9 +400,9 @@ after another in any arbitrary order."
     (<:div :id :contents
      (case *action*
        ((:index nil)
-        (mapc #'show-journal-entry *journal-entries*) :comments nil)
+        (mapc #'show-journal-entry *journal-entries*))
        ((:view)
-        (show-journal-entry (find-entry *post-number*) :comments t)))))
+        (show-journal-entry (find-entry *post-number*) :comments-p t)))))
     (<:div :id :navigation)
 
     #+debug
