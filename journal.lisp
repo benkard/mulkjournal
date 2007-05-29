@@ -96,6 +96,31 @@
              :initform '())))
 
 
+(defclass journal-comment ()
+  ((id :type (integer 0)
+       :accessor id-of
+       :initarg :id)
+   (date :type (integer 0)
+         :accessor date-of
+         :initarg :date)
+   (body :type string
+         :accessor body-of
+         :initarg :body
+         :initform "")
+   (author :type (or null string)
+           :accessor author-of
+           :initarg :author
+           :initform nil)
+   (email :type (or null string)
+          :accessor email-of
+          :initarg :email
+          :initform nil)
+   (website :type (or null string)
+            :accessor website-of
+            :initarg :website
+            :initform nil)))
+
+
 (defmethod shared-initialize ((journal-entry journal-entry) slot-names
                               &key)
   (with-slots (id) journal-entry
@@ -164,6 +189,14 @@
                                                   #+sbcl :utf-8)
     (let ((*read-eval* nil))
       (let ((data (read file)))
+        (let ((comments (member :comments data)))
+          (when comments
+            (setf (second comments)
+                  (mapcar #'(lambda (comment-record)
+                              (apply #'make-instance
+                                     'journal-comment
+                                     comment-record))
+                          (second comments)))))
         (apply #'make-instance 'journal-entry data)))))
 
 
@@ -258,7 +291,18 @@ after another in any arbitrary order."
   (http-send-headers))
 
 
-(defun show-journal-entry (journal-entry)
+(defun render-comment-body (text)
+  (loop for last-position = 0 then (cadr matches)
+        for matches = (ppcre:all-matches "(\\n|\\r|\\r\\n)(\\n|\\r|\\r\\n)+"
+                                      text)
+                    then (cddr matches)
+        while (not (endp matches))
+        do (<:p (<:as-html (subseq text last-position (car matches))))
+        finally
+          (<:p (<:as-html (subseq text last-position)))))
+
+
+(defun show-journal-entry (journal-entry &key (comments nil))
   (<:div :class :journal-entry
    (<:h2 (<:a :href (format nil
                             "journal.cgi?action=view&post=~D"
@@ -313,7 +357,24 @@ after another in any arbitrary order."
                         "journal.cgi?action=view&post=~D"
                         (id-of journal-entry))
           (<:as-is
-           (format nil "~D Kommentare" (length (comments-about journal-entry))))))))
+           (format nil "~D Kommentare" (length (comments-about journal-entry)))))))
+
+  (when (not (null (comments-about journal-entry)))
+    (<:div :class :journal-comments
+     (<:h2 "Kommentare")
+     (dolist (comment (comments-about journal-entry))
+       (with-slots (author body date id email website)
+           comment
+         (<:div :class :journal-comment
+          (<:div :class :journal-comment-header
+           (<:as-html (format nil "(~A) "
+                              (format-date nil "%day.%mon.%yr, %hr:%min" date)
+                              author))
+           (<:a :href website
+            (<:as-html (format nil "~A" author)))
+           (<:as-html " meint: "))
+          (<:div :class :journal-comment-body
+           (<:as-html (render-comment-body body)))))))))
 
 
 (defun show-web-journal ()
@@ -340,9 +401,9 @@ after another in any arbitrary order."
     (<:div :id :contents
      (case *action*
        ((:index nil)
-        (mapc #'show-journal-entry *journal-entries*))
+        (mapc #'show-journal-entry *journal-entries*) :comments nil)
        ((:view)
-        (show-journal-entry (find-entry *post-number*))))))
+        (show-journal-entry (find-entry *post-number*) :comments t)))))
     (<:div :id :navigation)
 
     #+debug
@@ -360,14 +421,17 @@ after another in any arbitrary order."
 
 (defun main ()
   (let ((*journal-entries* (read-journal-entries)))
-    (case *action*
-      (:view-atom-feed (show-atom-feed))
-      (otherwise       (show-web-journal)))))
+    (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
+                                            :charset charset:utf-8)))
+      (case *action*
+        (:view-atom-feed (show-atom-feed))
+        (otherwise       (show-web-journal))))))
 
 
 (handler-bind
     ((error #'
       (lambda (e)
+        (declare (ignorable e))
         (<:html
          (<:head
           (<:title "Kompottkins Weisheiten: Fehler"))

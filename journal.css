@@ -50,8 +50,27 @@ img.JOURNAL-ENTRY-PORTRAIT {
 }
 
 .JOURNAL-ENTRY-FOOTER {
-    font-size: small;
-    padding-top: 0.5em;
-    text-align: right;
-    clear: both;
+  font-size: small;
+  padding-top: 0.5em;
+  text-align: right;
+  clear: both;
+}
+
+.JOURNAL-COMMENTS h2 {
+  width: 80%;
+}
+
+.JOURNAL-COMMENT {
+  margin-top: 1em;
+  border: 1px solid #aaa;
+  padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+.JOURNAL-COMMENT-HEADER {
+  margin-bottom: 1em;
+}
+
+.JOURNAL-COMMENT-BODY {
+  text-align: justify;
+  text-indent: 1em;
 }
