@@ -11,7 +11,7 @@
   :description "Matthias Benkard's simple web journal engine"
   :licence     "Affero General Public License, version 1 or higher"
   :depends-on  (#:cl-ppcre #:cl-fad #:iterate #:cl-markdown #:parenscript
-                #:yaclml #:lisp-cgi-utils))
+                #:yaclml #:lisp-cgi-utils #:alexandria))
 
 
 ;;; The following does not generally work in a CGI setting because of
@@ -23,7 +23,7 @@
 
 (defpackage #:mulk.journal
   (:nicknames #:journal)
-  (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http))
+  (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http #:alexandria))
 
 (in-package #:mulk.journal)
 
@@ -178,6 +178,73 @@
     (sort journal-entries #'>= :key #'id-of)))
 
 
+(defmacro regex-case (string &body clauses)
+  (once-only (string)
+    `(cond ,@(loop for (keys . forms) in clauses
+                collect
+                  `(,(if (and (symbolp keys)
+                              (or (eq t keys)
+                                  (equal "OTHERWISE" (symbol-name keys))))
+                         't
+                         `(or ,@(loop for key in (if (listp keys)
+                                                     keys
+                                                     (list keys))
+                                   collect
+                                     `(ppcre:scan-to-strings ,key ,string))))
+                     ,@forms)))))
+
+
+(defun name-of-day (day-of-week)
+  (case day-of-week
+    (0 "Montag")
+    (1 "Dienstag")
+    (2 "Mittwoch")
+    (3 "Donnerstag")
+    (4 "Freitag")
+    (5 "Samstag")
+    (6 "Sonntag")))
+
+
+(defun format-date (destination date-control-string universal-time)
+  "Format DATE according to the description given by DATE-FORMAT-STRING.
+
+Recognised format directives are: %day, %mon, %yr, %day-of-week, %zone,
+%@day-of-week (name of day), %sec, %min, %hr, %daylight-p.
+
+Note that you can mix FORMAT and FORMAT-DATE painlessly by calling them
+after another in any arbitrary order."
+  (format
+   destination "~A"
+   (with-output-to-string (out)
+     (multiple-value-bind (sec min hr day mon yr day-of-week daylight-p zone)
+         (decode-universal-time universal-time)
+       (let ((first-match-p t))
+         (ppcre:do-matches (start end "%[^%]*" date-control-string)
+           (let ((substring (subseq date-control-string start end)))
+             (multiple-value-bind (control value offset)
+                 (regex-case substring
+                   ("^%day-of-week"  (values "~D" day-of-week 12))
+                   ("^%@day-of-week" (values "~A"
+                                             (name-of-day day-of-week)
+                                             13))
+                   ("^%daylight-p"   (values "~A" daylight-p  11))
+                   ("^%zone"         (values "~D" zone 5))
+                   ("^%day"          (values "~D" day  4))
+                   ("^%mon"          (values "~D" mon  4))
+                   ("^%yr"           (values "~D" yr   3))
+                   ("^%sec"          (values "~D" sec  4))
+                   ("^%min"          (values "~D" min  4))
+                   ("^%hr"           (values "~D" hr   3)))
+               (when first-match-p
+                 (format out (subseq date-control-string 0 start))
+                 (setf first-match-p nil))
+               (if control
+                   (progn
+                     (format out control value)
+                     (format out "~A" (subseq substring offset)))
+                   (format out "~A" substring))))))))))
+
+
 (defun show-atom-feed ()
   (http-add-header "Content-type" "text/xml; charset=UTF-8")
   (http-send-headers))
@@ -197,16 +264,13 @@
            (<:div :class :journal-entry
             (<:h2 (<:as-html (title-of journal-entry)))
             (<:div :class :journal-entry-date
-             (multiple-value-bind (sec min hour day mon yr
-                                   day-of-week zone)
-                 (decode-universal-time (date-of journal-entry))
-               (declare (ignore sec day-of-week zone))
                (<:as-html
-                (format nil "~D.~D.~D, ~D:~D"
-                        day mon yr hour min))))
+                (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%min."
+                             (date-of journal-entry))))
             (<:as-is (journal-markup->html (body-of journal-entry)))))))
     (<:div :id :navigation)
 
+    #+debug
     (loop for (x . y) in `(("Action" . ,*action*)
                            ("Request method" . ,*method*)
                            ("Query" . ,*query*)
