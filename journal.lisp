@@ -103,6 +103,10 @@
   (call-next-method))
 
 
+(defun find-entry (number)
+  (find number *journal-entries* :key #'id-of))
+
+
 (defun fixup-markdown-output (markup)
   ;; No, cl-markdown is certainly not perfect.
   ;;
@@ -250,24 +254,36 @@ after another in any arbitrary order."
   (http-send-headers))
 
 
+(defun show-journal-entry (journal-entry)
+  (<:div :class :journal-entry
+   (<:h2 (<:as-html (title-of journal-entry)))
+    (<:div :class :journal-entry-date
+     (<:as-html
+      (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%min."
+                   (date-of journal-entry))))
+    (<:as-is (journal-markup->html (body-of journal-entry)))))
+
+
 (defun show-web-journal ()
   (http-add-header "Content-type" "text/html; charset=UTF-8")
   (http-send-headers)
 
   (<:html
+   (<:head
+    (<:title
+     (<:as-html
+      (if (member *action* '(:view :edit :preview))
+          (format nil "~A -- Kompottkins Weisheiten"
+                  (title-of (find-entry *post-number*)))
+          "Kompottkins Weisheiten"))))
    (<:body
     (<:h1 :id :main-title "Kompottkins Weisheiten")
     (<:div :id :contents
-     (if (or (null *action*)
-             (eq *action* :index))
-         (dolist (journal-entry *journal-entries*)
-           (<:div :class :journal-entry
-            (<:h2 (<:as-html (title-of journal-entry)))
-            (<:div :class :journal-entry-date
-               (<:as-html
-                (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%min."
-                             (date-of journal-entry))))
-            (<:as-is (journal-markup->html (body-of journal-entry)))))))
+     (case *action*
+       ((:index nil)
+        (mapc #'show-journal-entry *journal-entries*))
+       ((:view)
+        (show-journal-entry (find-entry *post-number*))))))
     (<:div :id :navigation)
 
     #+debug
@@ -280,7 +296,7 @@ after another in any arbitrary order."
            (<:hr)
            (<:h2 (<:as-html x))
            (<:p "Type " (<:em (<:as-html (type-of y))) ".")
-           (<:pre (<:as-html (prin1-to-string y))))))))
+           (<:pre (<:as-html (prin1-to-string y)))))))
 
 
 (defun main ()
