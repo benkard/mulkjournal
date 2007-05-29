@@ -75,6 +75,9 @@
           :accessor title-of
           :initarg :title
           :initform "")
+   (date :type (integer 0)
+         :accessor date-of
+         :initarg :date)
    (body :type string
          :accessor body-of
          :initarg :body
@@ -189,6 +192,14 @@
          (dolist (journal-entry *journal-entries*)
            (<:div :class :journal-entry
             (<:h2 (<:as-html (title-of journal-entry)))
+            (<:div :class :journal-entry-date
+             (multiple-value-bind (sec min hour day mon yr
+                                   day-of-week zone)
+                 (decode-universal-time (date-of journal-entry))
+               (declare (ignore sec day-of-week zone))
+               (<:as-html
+                (format nil "~D.~D.~D, ~D:~D"
+                        day mon yr hour min))))
             (<:as-is (journal-markup->html (body-of journal-entry)))))))
     (<:div :id :navigation)
 
