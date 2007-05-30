@@ -11,7 +11,7 @@
   :description "Matthias Benkard's simple web journal engine"
   :licence     "Affero General Public License, version 1 or higher"
   :depends-on  (#:cl-ppcre #:cl-fad #:iterate #:cl-markdown #:parenscript
-                #:yaclml #:lisp-cgi-utils #:alexandria))
+                #:yaclml #:lisp-cgi-utils #:alexandria #:xml-emitter))
 
 
 ;;; The following does not generally work in a CGI setting because of
@@ -23,7 +23,8 @@
 
 (defpackage #:mulk.journal
   (:nicknames #:journal)
-  (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http #:alexandria))
+  (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http #:alexandria
+        #:xml-emitter))
 
 (in-package #:mulk.journal)
 
@@ -38,6 +39,7 @@
 
 
 (defparameter *query*
+  #+clisp
   (mapcan #'(lambda (param)
               (list (keywordify param)
                     (ext:convert-string-from-bytes
@@ -46,6 +48,7 @@
                       charset:iso-8859-1)
                      charset:utf-8)))
           (http-query-parameter-list))
+  #-clisp '()
   "The HTTP query string transformed into a property list.")
 
 (defparameter *action*
@@ -254,7 +257,8 @@
     (6 "Sonntag")))
 
 
-(defun format-date (destination date-control-string universal-time)
+(defun format-date (destination date-control-string universal-time
+                    &optional (time-zone nil time-zone-supplied-p))
   "Format DATE according to the description given by DATE-FORMAT-STRING.
 
 Recognised format directives are: %day, %mon, %yr, %day-of-week, %zone,
@@ -266,7 +270,9 @@ after another in any arbitrary order."
    destination "~A"
    (with-output-to-string (out)
      (multiple-value-bind (sec min hr day mon yr day-of-week daylight-p zone)
-         (decode-universal-time universal-time)
+         (if time-zone-supplied-p
+             (decode-universal-time universal-time time-zone)
+             (decode-universal-time universal-time))
        (let ((first-match-p t))
          (ppcre:do-matches (start end "%[^%]*" date-control-string)
            (let ((substring (subseq date-control-string start end)))
@@ -282,8 +288,14 @@ after another in any arbitrary order."
                    ("^%mon"          (values "~D" mon  4))
                    ("^%yr"           (values "~D" yr   3))
                    ("^%sec"          (values "~D" sec  4))
-                   ("^%min"          (values "~2,'0D" min  4))
-                   ("^%hr"           (values "~D" hr   3)))
+                   ("^%min"          (values "~D" min  4))
+                   ("^%hr"           (values "~D" hr   3))
+                   ("^%2day"         (values "~2,'0D" day  5))
+                   ("^%2mon"         (values "~2,'0D" mon  5))
+                   ("^%4yr"          (values "~4,'0D" yr   4))
+                   ("^%2sec"         (values "~2,'0D" sec  5))
+                   ("^%2min"         (values "~2,'0D" min  5))
+                   ("^%2hr"          (values "~2,'0D" hr   4)))
                (when first-match-p
                  (format out (subseq date-control-string 0 start))
                  (setf first-match-p nil))
@@ -295,8 +307,55 @@ after another in any arbitrary order."
 
 
 (defun show-atom-feed ()
-  (http-add-header "Content-type" "text/xml; charset=UTF-8")
-  (http-send-headers))
+  (http-add-header "Content-type" "application/atom+xml; charset=UTF-8")
+  (http-send-headers "application/atom+xml; charset=UTF-8")
+
+  (flet ((atom-time (time)
+           (format-date nil
+                        "%4yr-%2mon-%2dayT%2hr:%2min:%2secZ"
+                        time
+                        0)))
+    (with-xml-output (*standard-output* :encoding "utf-8")
+      (with-tag ("feed" '(("xmlns" "http://www.w3.org/2005/Atom")))
+        (emit-simple-tags :title "Kompottkins Weisheiten"
+                          :updated (atom-time
+                                    (max (reduce #'max *journal-entries*
+                                                 :key #'date-of)
+                                         (reduce #'(lambda (x y)
+                                                     (cond ((and x y)
+                                                            (max x y))
+                                                           (x x)
+                                                           (y y)
+                                                           (t 0)))
+                                                 *journal-entries*
+                                                 :key #'last-modification-of)))
+                          :id "88ad4730-90bc-4cc1-9e1f-d4cdb9ce177c")
+        (with-tag ("subtitle")
+          (xml-as-is "Geschwafel eines libert&auml;rsozialistischen Geeks"))
+        (with-tag ("author")
+          (emit-simple-tags :name "Matthias Benkard"))
+        (with-tag ("link" '(("rel" "alternate")
+                            ("type" "text/html")
+                            ("href" "http://benkard.nfshost.com/journal"))))
+
+        (dolist (journal-entry (sort (copy-list *journal-entries*)
+                                     #'>
+                                     :key #'date-of))
+          (with-slots (title date body categories last-modification id)
+              journal-entry
+            (with-tag ("entry")
+              (emit-simple-tags :title title
+                                :id (format nil "tag:benkard.nfshost.com,~D" id)
+                                :updated (atom-time (or last-modification date))
+                                :published (atom-time date))
+              (with-tag ("link" `(("rel" "alternate")
+                                  ("type" "text/html")
+                                  ("href" ,(format nil "http://benkard.nfshost.com/journal/journal.cgi?action=view&post=~D" id)))))
+              (with-tag ("content" '(("type" "xhtml")
+                                     ("xml:lang" "de")
+                                     ("xml:base" "http://benkard.nfshost.com/journal")))
+                (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
+                  (xml-as-is (journal-markup->html (body-of journal-entry))))))))))))
 
 
 (let ((scanner (ppcre:create-scanner "(\\n|\\r|\\r\\n)(\\n|\\r|\\r\\n)+")))
@@ -320,7 +379,7 @@ after another in any arbitrary order."
     (<:div :class :journal-entry-header
      (<:span :class :journal-entry-date
       (<:as-html
-       (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%min."
+       (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%2min."
                     (date-of journal-entry))))
      (unless (null (categories-of journal-entry))
        (<:span :class :journal-entry-category
@@ -428,7 +487,7 @@ after another in any arbitrary order."
 
 (defun show-web-journal ()
   (http-add-header "Content-type" "text/html; charset=UTF-8")
-  (http-send-headers)
+  (http-send-headers "text/html; charset=UTF-8")
 
   (<:html
    (<:head
@@ -438,6 +497,10 @@ after another in any arbitrary order."
           (format nil "~A -- Kompottkins Weisheiten"
                   (title-of (find-entry *post-number*)))
           "Kompottkins Weisheiten")))
+    (<:link :rel "alternate"
+            :type "application/atom+xml"
+            :href "journal.cgi?action=view-atom-feed"
+            :title "Kompottkins weiser Atom-Feed")
     (<:link :rel "stylesheet" :type "text/css" :href "../journal.css"))
    (<:body
     (<:div :id :main-title-box
@@ -502,6 +565,7 @@ after another in any arbitrary order."
              :stream out))))
 
 
+#+clisp
 (defun main ()
   (let ((*journal-entries* (read-journal-entries))
         (*random-state* (make-random-state t)))
@@ -525,6 +589,7 @@ after another in any arbitrary order."
         (otherwise       (show-web-journal))))))
 
 
+#+clisp
 (handler-bind
     ((error #'
       (lambda (e)

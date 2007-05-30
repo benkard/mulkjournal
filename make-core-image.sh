@@ -1,7 +1,7 @@
 #! /bin/sh
 clisp -q -q -on-error exit <<EOF
 (dolist (system '(:cl-ppcre :cl-fad :iterate :cl-markdown :parenscript
-                  :yaclml :lisp-cgi-utils :alexandria))
+                  :yaclml :lisp-cgi-utils :alexandria :xml-emitter))
   (clc:clc-require system))
 (saveinitmem "lispinit.mem")
 (quit)
