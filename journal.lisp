@@ -341,7 +341,8 @@ after another in any arbitrary order."
         (emit-simple-tags :title "Kompottkins Weisheiten"
                           :updated (atom-time
                                     (max (reduce #'max *journal-entries*
-                                                 :key #'date-of)
+                                                 :key #'date-of
+                                                 :initial-value 0)
                                          (reduce #'(lambda (x y)
                                                      (cond ((and x y)
                                                             (max x y))
@@ -349,7 +350,8 @@ after another in any arbitrary order."
                                                            (y y)
                                                            (t 0)))
                                                  *journal-entries*
-                                                 :key #'last-modification-of)))
+                                                 :key #'last-modification-of
+                                                 :initial-value 0)))
                           :id "88ad4730-90bc-4cc1-9e1f-d4cdb9ce177c")
         (with-tag ("subtitle")
           (xml-as-is "Geschwafel eines libert&auml;rsozialistischen Geeks"))
