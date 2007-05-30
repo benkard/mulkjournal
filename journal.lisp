@@ -423,7 +423,7 @@ after another in any arbitrary order."
                         "journal.cgi?action=view&post=~D"
                         (id-of journal-entry))
           (<:as-is
-           (format nil "~D Kommentare" (length (comments-about journal-entry)))))))
+           (format nil "~D Kommentar~:*~[e~;~:;e~]" (length (comments-about journal-entry)))))))
 
   (when (and comments-p (not (null (comments-about journal-entry))))
     (<:div :class :journal-comments
