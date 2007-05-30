@@ -79,6 +79,9 @@
   ((id :type (integer 0)
        :accessor id-of
        :initarg :id)
+   (uuid :type string
+         :accessor uuid-of
+         :initarg :uuid)
    (file :type (or null pathname)
          :accessor file-of
          :initarg :file)
@@ -111,6 +114,9 @@
   ((id :type (integer 0)
        :accessor id-of
        :initarg :id)
+   (uuid :type string
+         :accessor uuid-of
+         :initarg :uuid)
    (date :type (integer 0)
          :accessor date-of
          :initarg :date)
@@ -145,6 +151,21 @@
 
 (defun find-entry (number)
   (find number *journal-entries* :key #'id-of))
+
+
+(defun make-uuid ()
+  "Generate a version 4 UUID according to RFC 4122, section 4.4."
+  (format nil "~(~8,'0x-~4,'0x-~4,'0x-~2,'0x~2,'0x-~12,'0x~)"
+          (random #x100000000)                ;; time_low
+          (random #x10000)                    ;; time_mid
+          (logior #b0100000000000000
+                  (logand #b0000111111111111
+                          (random #x10000)))  ;; time_hi_and_version
+          (logior #b10000000
+                  (logand #b00111111
+                          (random #x100)))    ;; clock_seq_hi_and_reserved
+          (random #x100)                      ;; clock_seq_low
+          (random #x1000000000000)))          ;; node
 
 
 (defun fixup-markdown-output (markup)
@@ -345,7 +366,7 @@ after another in any arbitrary order."
               journal-entry
             (with-tag ("entry")
               (emit-simple-tags :title title
-                                :id (format nil "tag:benkard.nfshost.com,~D" id)
+                                :id (uuid-of journal-entry)
                                 :updated (atom-time (or last-modification date))
                                 :published (atom-time date))
               (with-tag ("link" `(("rel" "alternate")
@@ -544,9 +565,10 @@ after another in any arbitrary order."
                                        :if-exists :supersede
                                        :external-format #+clisp charset:utf-8
                                                         #+sbcl :utf-8)
-    (with-slots (id date last-modification body title categories comments)
+    (with-slots (id uuid date last-modification body title categories comments)
         entry
       (write `(:id ,id
+               :uuid ,uuid
                :date ,date
                :last-modification ,last-modification
                :title ,title
@@ -554,9 +576,11 @@ after another in any arbitrary order."
                :body ,body
                :comments ,(loop for comment in comments
                              collect
-                               (with-slots (id date author body email website)
+                               (with-slots (id uuid date author body email
+                                            website)
                                    comment
                                  `(:id ,id
+                                   :uuid ,uuid
                                    :date ,date
                                    :author ,author
                                    :email ,email
@@ -577,6 +601,7 @@ after another in any arbitrary order."
                                   :id (1+ (reduce #'max (comments-about entry)
                                                   :key #'id-of
                                                   :initial-value -1))
+                                  :uuid    (make-uuid)
                                   :date    (get-universal-time)
                                   :author  (getf *query* :author)
                                   :email   (getf *query* :email)
