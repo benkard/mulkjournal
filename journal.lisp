@@ -57,7 +57,7 @@
    and :POST-COMMENT.")
 
 (defparameter *post-number*
-  (parse-integer (getf *query* :post "")
+  (parse-integer (getf *query* :id "")
                  :junk-allowed t  #|| :radix 12 ||#)
   "The identification number of the journal entry to be acted upon.
    May be NIL.")
@@ -327,8 +327,23 @@ after another in any arbitrary order."
                    (format out "~A" substring))))))))))
 
 
+(defun link-to (action &key post-id (absolute nil))
+  (with-output-to-string (out)
+    (format out (if absolute
+                    "http://benkard.nfshost.com/journal/journal.cgi"
+                    "journal.cgi"))
+
+    (multiple-value-call
+        #'(lambda (&rest args) (apply #'format out args))
+      (case action
+        (:index "")
+        (:view-atom-feed (values "?action=view-atom-feed"))
+        (:view (values "?action=view&id=~D" post-id))
+        (:edit (values "?action=edit&id=~D" post-id))
+        (:post-comment (values "?action=view&id=~D" post-id))))))
+
+
 (defun show-atom-feed ()
-  (http-add-header "Content-type" "application/atom+xml; charset=UTF-8")
   (http-send-headers "application/atom+xml; charset=UTF-8")
 
   (flet ((atom-time (time)
@@ -374,7 +389,9 @@ after another in any arbitrary order."
                                 :published (atom-time date))
               (with-tag ("link" `(("rel" "alternate")
                                   ("type" "text/html")
-                                  ("href" ,(format nil "http://benkard.nfshost.com/journal/journal.cgi?action=view&post=~D" id)))))
+                                  ("href" ,(link-to :view
+                                                    :post-id id
+                                                    :absolute t)))))
               (with-tag ("content" '(("type" "xhtml")
                                      ("xml:lang" "de")
                                      ("xml:base" "http://benkard.nfshost.com/journal")))
@@ -396,9 +413,7 @@ after another in any arbitrary order."
 
 (defun show-journal-entry (journal-entry &key (comments-p nil))
   (<:div :class :journal-entry
-   (<:h2 (<:a :href (format nil
-                            "journal.cgi?action=view&post=~D"
-                            (id-of journal-entry))
+   (<:h2 (<:a :href (link-to :view :post-id (id-of journal-entry))
               (<:as-html (title-of journal-entry))))
     (<:div :class :journal-entry-header
      (<:span :class :journal-entry-date
@@ -415,13 +430,13 @@ after another in any arbitrary order."
      (<:form :class :journal-entry-delete-button-form
              :style "display: inline;"
              :method "post"
-             :action "journal.cgi"
+             :action (link-to :index)
       (<:div :style "display: inline;"
        (<:input :type "hidden"
                 :name "action"
                 :value "delete")
        (<:input :type "hidden"
-                :name "post"
+                :name "id"
                 :value (prin1-to-string (id-of journal-entry)))
        (<:button :type "submit"
                  (<:as-is "L&ouml;schen"))))
@@ -429,25 +444,18 @@ after another in any arbitrary order."
      (<:form :class :journal-entry-delete-button-form
              :style "display: inline;"
              :method "get"
-             :action "journal.cgi"
+             :action (link-to :index)
       (<:div :style "display: inline;"
        (<:input :type "hidden"
                 :name "action"
                 :value "edit")
        (<:input :type "hidden"
-                :name "post"
+                :name "id"
                 :value (prin1-to-string (id-of journal-entry)))
        (<:button :type "submit"
                  (<:as-is "Bearbeiten"))))
-     #+nil
-     (<:a :href (format nil
-                        "journal.cgi?action=edit&post=~D"
-                        (id-of journal-entry))
-          (<:as-is "Bearbeiten"))
      " | "
-     (<:a :href (format nil
-                        "journal.cgi?action=view&post=~D"
-                        (id-of journal-entry))
+     (<:a :href (link-to :view :post-id (id-of journal-entry))
           (<:as-is
            (format nil "~D Kommentar~:*~[e~;~:;e~]" (length (comments-about journal-entry)))))))
 
@@ -475,12 +483,12 @@ after another in any arbitrary order."
      (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
                     ver&ouml;ffentlicht werden und nur von Matthias eingesehen
                     werden k&ouml;nnen."))
-     (<:form :action "journal.cgi"
+     (<:form :action (link-to :view :post-id (id-of journal-entry))
              :method "post"
              :accept-charset "UTF-8"
       (<:div :style "display: hidden"
        (<:input :type "hidden"
-                :name "post"
+                :name "id"
                 :value (prin1-to-string (id-of journal-entry)))
        (<:input :type "hidden"
                 :name "action"
@@ -522,7 +530,6 @@ after another in any arbitrary order."
 
 
 (defun show-web-journal ()
-  (http-add-header "Content-type" "text/html; charset=UTF-8")
   (http-send-headers "text/html; charset=UTF-8")
 
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
@@ -535,13 +542,13 @@ after another in any arbitrary order."
           "Kompottkins Weisheiten")))
     (<:link :rel "alternate"
             :type "application/atom+xml"
-            :href "journal.cgi?action=view-atom-feed"
+            :href (link-to :view-atom-feed)
             :title "Kompottkins weiser Atom-Feed")
     (<:link :rel "stylesheet" :type "text/css" :href "../journal.css"))
    (<:body
     (<:div :id :main-title-box
      (<:h1 :id :main-title
-           (<:a :href "journal.cgi?action=index"
+           (<:a :href (link-to :index)
                 "Kompottkins Weisheiten"))
      (<:div :id :main-subtitle
       (<:as-is "&bull;&bull;&bull; ")
