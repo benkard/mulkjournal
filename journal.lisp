@@ -198,11 +198,7 @@
      for matches = (ppcre:all-matches "<a [^>]*?> " markup)
      while (not (null matches))
      do (progn
-          (setf markup #+nil
-                (delete-if (constantly t)
-                           markup
-                           :start (1- (second matches))
-                           :end (second matches))
+          (setf markup
                 (replace markup markup :start1 (1+ (first matches))
                                        :end1 (second matches)
                                        :start2 (first matches)
