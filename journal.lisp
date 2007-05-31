@@ -382,14 +382,17 @@ after another in any arbitrary order."
                                                  *journal-entries*
                                                  :key #'last-modification-of
                                                  :initial-value 0)))
-                          :id "88ad4730-90bc-4cc1-9e1f-d4cdb9ce177c")
+                          :id "urn:uuid:88ad4730-90bc-4cc1-9e1f-d4cdb9ce177c")
         (with-tag ("subtitle")
           (xml-as-is "Geschwafel eines libert&#xE4;rsozialistischen Geeks"))
         (with-tag ("author")
           (emit-simple-tags :name "Matthias Benkard"))
-        (with-tag ("link" '(("rel" "alternate")
+        (with-tag ("link" `(("rel" "alternate")
                             ("type" "text/html")
-                            ("href" "http://benkard.nfshost.com/journal"))))
+                            ("href" ,(link-to :index :absolute t)))))
+        (with-tag ("link" `(("rel" "self")
+                            ("type" "application/atom+xml")
+                            ("href" ,(link-to :view-atom-feed :absolute t)))))
 
         (dolist (journal-entry (sort (copy-list *journal-entries*)
                                      #'>
@@ -398,7 +401,7 @@ after another in any arbitrary order."
               journal-entry
             (with-tag ("entry")
               (emit-simple-tags :title title
-                                :id (format nil "~(~A~)"
+                                :id (format nil "urn:uuid:~(~A~)"
                                             (uuid-of journal-entry))
                                 :updated (atom-time (or last-modification date))
                                 :published (atom-time date))
