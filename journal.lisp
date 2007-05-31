@@ -354,7 +354,7 @@ after another in any arbitrary order."
                                                  :initial-value 0)))
                           :id "88ad4730-90bc-4cc1-9e1f-d4cdb9ce177c")
         (with-tag ("subtitle")
-          (xml-as-is "Geschwafel eines libert&auml;rsozialistischen Geeks"))
+          (xml-as-is "Geschwafel eines libert&#xE4;rsozialistischen Geeks"))
         (with-tag ("author")
           (emit-simple-tags :name "Matthias Benkard"))
         (with-tag ("link" '(("rel" "alternate")
@@ -368,7 +368,8 @@ after another in any arbitrary order."
               journal-entry
             (with-tag ("entry")
               (emit-simple-tags :title title
-                                :id (uuid-of journal-entry)
+                                :id (format nil "~(~A~)"
+                                            (uuid-of journal-entry))
                                 :updated (atom-time (or last-modification date))
                                 :published (atom-time date))
               (with-tag ("link" `(("rel" "alternate")
@@ -413,29 +414,31 @@ after another in any arbitrary order."
     (<:div :class :journal-entry-footer
      (<:form :class :journal-entry-delete-button-form
              :style "display: inline;"
-             :method "DELETE"
+             :method "post"
              :action "journal.cgi"
-      (<:input :type "hidden"
-               :name "action"
-               :value "delete")
-      (<:input :type "hidden"
-               :name "post"
-               :value (prin1-to-string (id-of journal-entry)))
-      (<:button :type "submit"
-                (<:as-is "L&ouml;schen")))
+      (<:div :style "display: inline;"
+       (<:input :type "hidden"
+                :name "action"
+                :value "delete")
+       (<:input :type "hidden"
+                :name "post"
+                :value (prin1-to-string (id-of journal-entry)))
+       (<:button :type "submit"
+                 (<:as-is "L&ouml;schen"))))
      " | "
      (<:form :class :journal-entry-delete-button-form
              :style "display: inline;"
-             :method "GET"
+             :method "get"
              :action "journal.cgi"
-      (<:input :type "hidden"
-               :name "action"
-               :value "edit")
-      (<:input :type "hidden"
-               :name "post"
-               :value (prin1-to-string (id-of journal-entry)))
-      (<:button :type "submit"
-                (<:as-is "Bearbeiten")))
+      (<:div :style "display: inline;"
+       (<:input :type "hidden"
+                :name "action"
+                :value "edit")
+       (<:input :type "hidden"
+                :name "post"
+                :value (prin1-to-string (id-of journal-entry)))
+       (<:button :type "submit"
+                 (<:as-is "Bearbeiten"))))
      #+nil
      (<:a :href (format nil
                         "journal.cgi?action=edit&post=~D"
@@ -473,14 +476,15 @@ after another in any arbitrary order."
                     ver&ouml;ffentlicht werden und nur von Matthias eingesehen
                     werden k&ouml;nnen."))
      (<:form :action "journal.cgi"
-             :method "POST"
+             :method "post"
              :accept-charset "UTF-8"
-      (<:input :type "hidden"
-               :name "post"
-               :value (prin1-to-string (id-of journal-entry)))
-      (<:input :type "hidden"
-               :name "action"
-               :value "post-comment")
+      (<:div :style "display: hidden"
+       (<:input :type "hidden"
+                :name "post"
+                :value (prin1-to-string (id-of journal-entry)))
+       (<:input :type "hidden"
+                :name "action"
+                :value "post-comment"))
       (<:div :style "display: table"
        (loop for (name . desc) in '(("author" . "Name (n&ouml;tig)")
                                     ("email" . "E-Mail")
@@ -504,15 +508,24 @@ after another in any arbitrary order."
                      :id "comment-body"
                      :rows 10
                      :cols 40))))
-      (<:button :type "submit"
-       (<:as-is "Ver&ouml;ffentlichen"))))))
+      (<:div
+       (<:button :type "submit"
+        (<:as-is "Ver&ouml;ffentlichen")))))))
+
+
+(yaclml:deftag <xhtml (&attribute dir lang xmlns (prologue t) &body body)
+  (when prologue
+    (emit-princ "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"))
+  (emit-open-tag "html" `(("dir" . ,dir) ("lang" . ,lang) ("xmlns" . ,xmlns)))
+  (emit-body body)
+  (emit-close-tag "html"))
 
 
 (defun show-web-journal ()
   (http-add-header "Content-type" "text/html; charset=UTF-8")
   (http-send-headers "text/html; charset=UTF-8")
 
-  (<:html
+  (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
    (<:head
     (<:title
      (<:as-html
@@ -545,8 +558,9 @@ after another in any arbitrary order."
                                          #'>
                                          :key #'date-of)))
        ((:view :post-comment)
-        (show-journal-entry (find-entry *post-number*) :comments-p t)))))
-    (<:div :id :navigation)
+        (show-journal-entry (find-entry *post-number*) :comments-p t))))
+    (<:div :id :navigation))
+
 
     #+debug
     (loop for (x . y) in `(("Action" . ,*action*)

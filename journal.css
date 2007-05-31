@@ -1,3 +1,5 @@
+/* CSS version 3.0 */
+
 #MAIN-TITLE {
   font-stretch: wider;
   font-variant: small-caps;
@@ -18,13 +20,14 @@
 .JOURNAL-ENTRY-HEADER {
   font-size: x-small;
   color: #444;
+  background-color: inherit;
   font-weight: lighter;
   text-align: left;
 }
 
 div.JOURNAL-ENTRY > h2 {
   border-bottom: 2px solid #000;
-  //font-variant: small-caps;
+  /* font-variant: small-caps; */
 }
 
 .JOURNAL-ENTRY > h2 > a {
