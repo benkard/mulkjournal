@@ -30,20 +30,22 @@
   :description "Matthias Benkard's simple web journal engine"
   :licence     "Affero General Public License, version 1 or higher"
   :depends-on  (#:cl-ppcre #:cl-fad #:iterate #:cl-markdown #:parenscript
-                #:yaclml #:lisp-cgi-utils #:alexandria #:xml-emitter))
+                #:yaclml #:lisp-cgi-utils #:alexandria #:xml-emitter
+                #:split-sequence))
 
 
 ;;; The following does not generally work in a CGI setting because of
 ;;; security restrictions.  Loading all the dependencies individually
 ;;; rather than using a core image would certainly be too slow for any
 ;;; serious CGI usage, anyway, so what the heck.
-#+nil (asdf:oos 'asdf:load-op '#:mulk.journal)
+(unless (find-package '#:http)
+  (asdf:oos 'asdf:load-op '#:mulk.journal))
 
 
 (defpackage #:mulk.journal
   (:nicknames #:journal)
   (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http #:alexandria
-        #:xml-emitter))
+        #:xml-emitter #:split-sequence))
 
 (in-package #:mulk.journal)
 
@@ -56,6 +58,13 @@
                 (symbol (symbol-name   thing)))
               '#:keyword)))
 
+
+(defparameter *site*
+  (if (file-exists-p #p"/home/mulk") :mst-plus :nfs.net)
+  "One of :WIRSELKRAUT and :NFS.NET.")
+
+(defparameter *debugging-p*
+  (eq *site* :mst-plus))
 
 (defparameter *query*
   #+clisp
@@ -70,16 +79,44 @@
   #-clisp '()
   "The HTTP query string transformed into a property list.")
 
-(defparameter *action*
-  (keywordify (getf *query* :action))
-  "One of NIL, :INDEX, :VIEW-ATOM-FEED, :VIEW, :POST, :EDIT, :PREVIEW,
-   and :POST-COMMENT.")
+(defparameter *http-env*
+  (http-get-env-vars)
+  "A hash table of HTTP environment variables.")
+
+(defparameter *subpath-query*
+  (subseq (gethash "REQUEST_URI" *http-env*)
+          (length (if (eq *site* :mst-plus)
+                      (gethash "SCRIPT_NAME" *http-env*)
+                      "/journal")))
+  "The query string stripped of the script location.")
+
+(defparameter *subpath-string*
+  (subseq *subpath-query*
+          0
+          (or (position #\? *subpath-query*)
+              (length *subpath-query*)))
+  "The query string stripped of the script location and query parameters,
+   that is, the virtual path below the script.")
+
+(defparameter *subpath*
+  (split-sequence #\/ *subpath-string*
+                  :remove-empty-subseqs t)
+  "*SUBPATH-STRING* parsed into a list of nested directories.")
 
 (defparameter *post-number*
-  (parse-integer (getf *query* :id "")
+  (parse-integer (or (first *subpath*)
+                     (getf *query* :id ""))
                  :junk-allowed t  #|| :radix 12 ||#)
   "The identification number of the journal entry to be acted upon.
    May be NIL.")
+
+(defparameter *action*
+  (or (keywordify (getf *query* :action))
+      (cond (*post-number*                      :view)
+            ((string= "feed" (first *subpath*)) :view-atom-feed)
+            (t                                  nil)))
+  "One of NIL, :INDEX, :VIEW-ATOM-FEED, :VIEW, :POST, :EDIT, :PREVIEW,
+   and :POST-COMMENT.")
 
 (defparameter *method*
   (keywordify (gethash "REQUEST_METHOD" (http-get-env-vars)))
@@ -88,10 +125,6 @@
 (defparameter *journal-entries*
   '()
   "A list of JOURNAL-ENTRY objects.")
-
-(defparameter *http-env*
-  (http-get-env-vars)
-  "A hash table of HTTP environment variables.")
 
 
 (defclass journal-entry ()
@@ -344,18 +377,23 @@ after another in any arbitrary order."
 
 (defun link-to (action &key post-id (absolute nil))
   (with-output-to-string (out)
-    (format out (if absolute
-                    "http://benkard.nfshost.com/journal/journal.cgi"
-                    "journal.cgi"))
-
+    (format out "~A" (if absolute
+                         "http://matthias.benkard.de/journal"
+                         ;; When testing on the local webserver, don't
+                         ;; use /journal as a relative URI, because it
+                         ;; won't work.
+                         (if (search ".cgi"
+                                     (gethash "REQUEST_URI" *http-env* ""))
+                             (gethash "SCRIPT_NAME" *http-env* "")
+                             "/journal")))
     (multiple-value-call
         #'(lambda (&rest args) (apply #'format out args))
       (case action
         (:index "")
-        (:view-atom-feed (values "?action=view-atom-feed"))
-        (:view (values "?action=view&id=~D" post-id))
-        (:edit (values "?action=edit&id=~D" post-id))
-        (:post-comment (values "?action=view&id=~D" post-id))))))
+        (:view-atom-feed (values "/feed"))
+        (:view (values "/~D" post-id))
+        (:edit (values "/~D?action=edit" post-id))
+        (:post-comment (values "/~D" post-id))))))
 
 
 (defun show-atom-feed ()
@@ -410,9 +448,9 @@ after another in any arbitrary order."
                                   ("href" ,(link-to :view
                                                     :post-id id
                                                     :absolute t)))))
-              (with-tag ("content" '(("type" "xhtml")
+              (with-tag ("content" `(("type" "xhtml")
                                      ("xml:lang" "de")
-                                     ("xml:base" "http://benkard.nfshost.com/journal")))
+                                     ("xml:base" ,(link-to :index :absolute t))))
                 (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
                   (xml-as-is (journal-markup->html (body-of journal-entry))))))))))))
 
@@ -587,17 +625,18 @@ after another in any arbitrary order."
     (<:div :id :navigation))
 
 
-    #+debug
-    (loop for (x . y) in `(("Action" . ,*action*)
-                           ("Request method" . ,*method*)
-                           ("Query" . ,*query*)
-                           ("Query string" . ,(http-get-query-string))
-                           ("Environment" . ,(http-get-env-vars)))
-       do (<:p
-           (<:hr)
-           (<:h2 (<:as-html x))
-           (<:p "Type " (<:em (<:as-html (type-of y))) ".")
-           (<:pre (<:as-html (prin1-to-string y)))))))
+    (when *debugging-p*
+      (loop for (x . y) in `(("Action" . ,*action*)
+                             ("Request method" . ,*method*)
+                             ("Query" . ,*query*)
+                             ("Query string" . ,(http-get-query-string))
+                             ("Subpath" . ,*subpath*)
+                             ("Environment" . ,(http-get-env-vars)))
+         do (<:p
+             (<:hr)
+             (<:h2 (<:as-html x))
+             (<:p "Type " (<:em (<:as-html (type-of y))) ".")
+             (<:pre (<:as-html (prin1-to-string y))))))))
 
 
 (defun write-out-entry (entry)
