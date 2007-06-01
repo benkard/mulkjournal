@@ -382,8 +382,7 @@ after another in any arbitrary order."
                          ;; When testing on the local webserver, don't
                          ;; use /journal as a relative URI, because it
                          ;; won't work.
-                         (if (search ".cgi"
-                                     (gethash "REQUEST_URI" *http-env* ""))
+                         (if (eq *site* :mst-plus)
                              (gethash "SCRIPT_NAME" *http-env* "")
                              "/journal")))
     (multiple-value-call
@@ -393,7 +392,10 @@ after another in any arbitrary order."
         (:view-atom-feed (values "/feed"))
         (:view (values "/~D" post-id))
         (:edit (values "/~D?action=edit" post-id))
-        (:post-comment (values "/~D" post-id))))))
+        (:post-comment (values "/~D" post-id))
+        (:css (if (eq *site* :mst-plus)
+                  "/../../journal.css"
+                  "/../journal.css"))))))
 
 
 (defun show-atom-feed ()
@@ -600,7 +602,7 @@ after another in any arbitrary order."
             :type "application/atom+xml"
             :href (link-to :view-atom-feed)
             :title "Kompottkins weiser Atom-Feed")
-    (<:link :rel "stylesheet" :type "text/css" :href "../journal.css"))
+    (<:link :rel "stylesheet" :type "text/css" :href (link-to :css)))
    (<:body
     (<:div :id :main-title-box
      (<:h1 :id :main-title
