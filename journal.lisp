@@ -602,7 +602,9 @@ after another in any arbitrary order."
             :type "application/atom+xml"
             :href (link-to :view-atom-feed)
             :title "Kompottkins weiser Atom-Feed")
-    (<:link :rel "stylesheet" :type "text/css" :href (link-to :css)))
+    (<:link :rel "stylesheet" :type "text/css" :href (link-to :css))
+    (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
+    (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name"))
    (<:body
     (<:div :id :main-title-box
      (<:h1 :id :main-title
