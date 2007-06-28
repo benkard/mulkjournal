@@ -35,9 +35,9 @@
 
 
 ;;; The following does not generally work in a CGI setting because of
-;;; security restrictions.  Loading all the dependencies individually
-;;; rather than using a core image would certainly be too slow for any
-;;; serious CGI usage, anyway, so what the heck.
+;;; security restrictions.  Then again, loading all the dependencies
+;;; individually rather than using a core image would certainly be too
+;;; slow for any serious CGI usage, anyway, so what the heck.
 (unless (find-package '#:http)
   (asdf:oos 'asdf:load-op '#:mulk.journal))
 
