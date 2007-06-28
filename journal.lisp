@@ -122,6 +122,10 @@
   (keywordify (gethash "REQUEST_METHOD" (http-get-env-vars)))
   "One of :GET, :POST, :PUT, and :DELETE.")
 
+(defparameter *script-filename*
+  (pathname-as-file (or (gethash "SCRIPT_FILENAME" *http-env*)
+                        "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi")))
+
 (defparameter *journal-entries*
   '()
   "A list of JOURNAL-ENTRY objects.")
@@ -280,23 +284,28 @@
         (apply #'make-instance 'journal-entry :file filename data)))))
 
 
-(defun read-journal-entries ()
+(defun find-journal-entry-files ()
   (let ((directory
          (make-pathname
           :directory (pathname-directory
                       (merge-pathnames
                        (make-pathname :directory '(:relative "journal-entries")
                                       :name nil)
-                       (pathname-as-file
-                        (or (gethash "SCRIPT_FILENAME" *http-env*)
-                            "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi"))))))
-        (journal-entries (list)))
+                       *script-filename*))))
+        (journal-entry-files (list)))
     (when (file-exists-p directory)
       (walk-directory directory
                       #'(lambda (x)
-                          (push (read-journal-entry x) journal-entries))
+                          (push x journal-entry-files))
                       :test (complement #'directory-pathname-p)))
-    (sort journal-entries #'>= :key #'id-of)))
+    journal-entry-files))
+
+
+(defun read-journal-entries ()
+  (let ((journal-entry-files (find-journal-entry-files)))
+    (sort (mapcar #'read-journal-entry journal-entry-files)
+          #'>=
+          :key #'id-of)))
 
 
 (defmacro regex-case (string &body clauses)
@@ -375,6 +384,16 @@ after another in any arbitrary order."
                    (format out "~A" substring))))))))))
 
 
+(defun compute-journal-last-modified-date ()
+  #-clisp (get-universal-time)
+  #+clisp
+  (loop for file in (list* *script-filename*                    ;; journal.cgi
+                           (merge-pathnames (make-pathname :type "lisp")
+                                            *script-filename*)  ;; journal.lisp
+                           (find-journal-entry-files))
+        maximize (posix:file-stat-mtime (posix:file-stat file))))
+
+
 (defun link-to (action &key post-id (absolute nil))
   (with-output-to-string (out)
     (format out "~A" (if absolute
@@ -399,6 +418,7 @@ after another in any arbitrary order."
 
 
 (defun show-atom-feed ()
+  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-send-headers "application/atom+xml; charset=UTF-8")
 
   (flet ((atom-time (time)
@@ -588,6 +608,7 @@ after another in any arbitrary order."
 
 
 (defun show-web-journal ()
+  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-send-headers "text/html; charset=UTF-8")
 
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
