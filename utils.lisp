@@ -67,22 +67,6 @@
   markup)
 
 
-(defmacro regex-case (string &body clauses)
-  (once-only (string)
-    `(cond ,@(loop for (keys . forms) in clauses
-                collect
-                  `(,(if (and (symbolp keys)
-                              (or (eq t keys)
-                                  (equal "OTHERWISE" (symbol-name keys))))
-                         't
-                         `(or ,@(loop for key in (if (listp keys)
-                                                     keys
-                                                     (list keys))
-                                   collect
-                                     `(ppcre:scan-to-strings ,key ,string))))
-                     ,@forms)))))
-
-
 (defun name-of-day (day-of-week)
   (case day-of-week
     (0 "Montag")
@@ -202,13 +186,6 @@ ELEMENT-TYPE as the stream's."
           (let ((string (funcall fun)))
             (princ string out)
             string)))))
-
-
-(defmacro with-result-cache ((cache-id &key (younger-than nil younger-than-p))
-                             &body body)
-  `(call-with-result-cache ,cache-id
-                           #'(lambda () ,@body)
-                           ,@(and younger-than-p `(:younger-than ,younger-than))))
 
 
 (defun format-date (destination date-control-string universal-time

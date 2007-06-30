@@ -65,10 +65,6 @@
     (funcall func)))
 
 
-(defmacro with-initialised-journal (&body body)
-  `(call-with-initialised-journal #'(lambda () ,@body)))
-
-
 #+clisp
 (defun journal-main ()
   (with-initialised-journal

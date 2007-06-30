@@ -27,8 +27,9 @@
                 #:yaclml #:lisp-cgi-utils #:alexandria #:xml-emitter
                 #:split-sequence)
   :components  ((:file "defpackage")
-                (:file "utils")
+                (:file "macros")
                 (:file "globals")
+                (:file "utils")
                 (:file "journal-content")
                 (:file "journal")
                 (:file "main"))
