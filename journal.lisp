@@ -229,7 +229,11 @@
 
 
 (defun show-web-journal ()
-  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+  ;; TODO: Check how to make Squid not wait for the CGI script's
+  ;;       termination, which makes generating a Last-Modified header
+  ;;       feel slower to the end user rather than faster.
+  ;;
+  ;; (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-send-headers "text/html; charset=UTF-8")
 
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
