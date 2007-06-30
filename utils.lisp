@@ -181,7 +181,8 @@ ELEMENT-TYPE as the stream's."
                                                                   "CACHE-~A"
                                                                   cache-id))
                                      *cache-dir*)))
-    (if (and (file-exists-p cache-file)
+    (if (and (directory-exists-p *cache-dir*)
+             (file-exists-p cache-file)
              #-clisp nil
              #+clisp (or (not younger-p)
                          (> (posix:file-stat-mtime (posix:file-stat cache-file))
@@ -191,7 +192,9 @@ ELEMENT-TYPE as the stream's."
                             :external-format #+clisp charset:utf-8
                                              #+sbcl :utf-8)
           (read-to-array in))
-        (with-open-file (out cache-file
+        (with-open-file (out (if (directory-exists-p *cache-dir*)
+                                 cache-file
+                                 #p"/dev/null")
                              :direction :output
                              :if-exists :supersede
                              :external-format #+clisp charset:utf-8
