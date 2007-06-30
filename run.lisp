@@ -29,7 +29,6 @@
 ;;; been written for purposes of debugging, development and
 ;;; documentation.
 
-
 (defclass load-source-simple-op (asdf:operation) ())
 (defmethod asdf:perform ((o load-source-simple-op) (c asdf:component))
   nil)
@@ -38,16 +37,21 @@
     (load (asdf:component-pathname c))))
 
 
+#+clisp
+(unless (asdf:find-system :mulk-journal nil)
+  (let ((*package* (find-package :asdf)))
+    (load (merge-pathnames "mulk-journal.asd"
+                           system::*current-source-file*))))
+
+
 ;;; The following does not generally work in a CGI setting because of
 ;;; security restrictions.  Then again, loading all the dependencies
 ;;; individually rather than using a core image would certainly be too
-;;; slow for any serious CGI usage, anyway, so what the heck.
-(unless (asdf:find-system :mulk-journal nil)
-  (let ((*package* (find-package :asdf)))
-    (load "mulk-journal.asd")))
-
-
-(asdf:oos 'load-source-simple-op '#:mulk-journal)
+;;; slow for any serious CGI usage, anyway, so what the heck.  Loading
+;;; our own files (no dependencies) using a manually loaded system
+;;; definition (see above) works, which suffices for our needs.
+(unless (find-package '#:mulk.journal)
+  (asdf:oos 'load-source-simple-op '#:mulk-journal))
 
 
 #+clisp
