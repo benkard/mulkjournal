@@ -42,13 +42,12 @@
 ;;; security restrictions.  Then again, loading all the dependencies
 ;;; individually rather than using a core image would certainly be too
 ;;; slow for any serious CGI usage, anyway, so what the heck.
-(ignore-errors
-  (unless (asdf:find-system :mulk-journal nil)
-    (let ((*package* (find-package :asdf)))
-      (load "mulk-journal.asd")))
+(unless (asdf:find-system :mulk-journal nil)
+  (let ((*package* (find-package :asdf)))
+    (load "mulk-journal.asd")))
 
-  (unless (find-package '#:mulk.journal)
-    (asdf:oos 'load-source-simple-op '#:mulk-journal)))
+
+(asdf:oos 'load-source-simple-op '#:mulk-journal)
 
 
 #+clisp

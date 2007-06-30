@@ -57,6 +57,10 @@
          (*script-filename* (pathname-as-file
                              (or (gethash "SCRIPT_FILENAME" *http-env*)
                                  "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi")))
+         (*script-dir*      (make-pathname
+                             :directory (pathname-directory *script-filename*)))
+         (*cache-dir*       (merge-pathnames #p"cache/" *script-dir*))
+         (*entry-dir*       (merge-pathnames #p"journal-entries/" *script-dir*))
          (*journal-entries* (read-journal-entries)))
     (funcall func)))
 

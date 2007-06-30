@@ -292,32 +292,3 @@
              (<:p "Type " (<:em (<:as-html (type-of y))) ".")
              (<:pre (<:as-html (prin1-to-string y))))))))
 
-
-(defun write-out-entry (entry)
-  (assert (file-of entry))
-  (with-open-file (out (file-of entry) :direction :output
-                                       :if-exists :supersede
-                                       :external-format #+clisp charset:utf-8
-                                                        #+sbcl :utf-8)
-    (with-slots (id uuid date last-modification body title categories comments)
-        entry
-      (write `(:id ,id
-               :uuid ,uuid
-               :date ,date
-               :last-modification ,last-modification
-               :title ,title
-               :categories ,categories
-               :body ,body
-               :comments ,(loop for comment in comments
-                             collect
-                               (with-slots (id uuid date author body email
-                                            website)
-                                   comment
-                                 `(:id ,id
-                                   :uuid ,uuid
-                                   :date ,date
-                                   :author ,author
-                                   :email ,email
-                                   :website ,website
-                                   :body ,body))))
-             :stream out))))

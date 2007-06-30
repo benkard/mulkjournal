@@ -60,5 +60,11 @@
 (defparameter *journal-entries* nil
   "A list of JOURNAL-ENTRY objects.")
 
-(defparameter *cgi-p* nil
-  "Whether we have been called as a CGI script or not.")
+(defparameter *script-dir* nil
+  "The directory which all the Lisp code lives in.")
+
+(defparameter *cache-dir* nil
+  "The directory used for caching generated markup.")
+
+(defparameter *entry-dir* nil
+  "The directory containing the journal entry data files.")

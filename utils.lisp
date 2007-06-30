@@ -67,30 +67,6 @@
   markup)
 
 
-(defun find-journal-entry-files ()
-  (let ((directory
-         (make-pathname
-          :directory (pathname-directory
-                      (merge-pathnames
-                       (make-pathname :directory '(:relative "journal-entries")
-                                      :name nil)
-                       *script-filename*))))
-        (journal-entry-files (list)))
-    (when (file-exists-p directory)
-      (walk-directory directory
-                      #'(lambda (x)
-                          (push x journal-entry-files))
-                      :test (complement #'directory-pathname-p)))
-    journal-entry-files))
-
-
-(defun read-journal-entries ()
-  (let ((journal-entry-files (find-journal-entry-files)))
-    (sort (mapcar #'read-journal-entry journal-entry-files)
-          #'>=
-          :key #'id-of)))
-
-
 (defmacro regex-case (string &body clauses)
   (once-only (string)
     `(cond ,@(loop for (keys . forms) in clauses
@@ -118,8 +94,8 @@
     (6 "Sonntag")))
 
 
-(defun format-date (destination date-control-string universal-time
-                    &optional (time-zone nil time-zone-supplied-p))
+(defun %real-format-date (destination date-control-string universal-time
+                          &optional (time-zone nil time-zone-supplied-p))
   "Format DATE according to the description given by DATE-FORMAT-STRING.
 
 Recognised format directives are: %day, %mon, %yr, %day-of-week, %zone,
@@ -165,3 +141,79 @@ after another in any arbitrary order."
                      (format out control value)
                      (format out "~A" (subseq substring offset)))
                    (format out "~A" substring))))))))))
+
+
+(defun compute-script-last-modified-date ()
+  #-clisp (get-universal-time)
+  #+clisp
+  (loop for file in (list* *script-filename*                    ;; journal.cgi
+                           (remove-if-not #'(lambda (p)
+                                              (equal "lisp"
+                                                     (pathname-type p)))
+                                          (list-directory *script-dir*)))
+        maximize (posix:file-stat-mtime (posix:file-stat file))))
+
+
+(defun read-to-array (stream &key (initial-length 128))
+  "Read elements from a stream repeatedly until the end of file is
+reached and write the results into a newly created array of the same
+ELEMENT-TYPE as the stream's."
+  (do* ((buffer          (make-array (list initial-length)
+                                     :element-type (stream-element-type stream)
+                                     :adjustable t
+                                     :fill-pointer t))
+        (last-unmodified (read-sequence buffer stream)
+                         (read-sequence buffer stream :start old-length))
+        (read-elements   last-unmodified
+                         (- last-unmodified old-length))
+        (old-length      initial-length length)
+        (length          (ceiling (* 1.5 old-length))
+                         (ceiling (* 1.5 old-length))))
+       ((< last-unmodified old-length)
+        (setf (fill-pointer buffer) last-unmodified)
+        buffer)
+    (setf buffer (adjust-array buffer (list length)
+                               :fill-pointer length))))
+
+
+(defun call-with-result-cache (cache-id fun &key (younger-than nil younger-p))
+  (let ((cache-file (merge-pathnames (make-pathname :name (format nil
+                                                                  "CACHE-~A"
+                                                                  cache-id))
+                                     *cache-dir*)))
+    (if (and (file-exists-p cache-file)
+             #-clisp nil
+             #+clisp (or (not younger-p)
+                         (> (posix:file-stat-mtime (posix:file-stat cache-file))
+                            younger-than)))
+        (with-open-file (in cache-file
+                            :direction :input
+                            :external-format #+clisp charset:utf-8
+                                             #+sbcl :utf-8)
+          (read-to-array in))
+        (with-open-file (out cache-file
+                             :direction :output
+                             :if-exists :supersede
+                             :external-format #+clisp charset:utf-8
+                                              #+sbcl :utf-8)
+          (let ((string (funcall fun)))
+            (princ string out)
+            string)))))
+
+
+(defmacro with-result-cache ((cache-id &key (younger-than nil younger-than-p))
+                             &body body)
+  `(call-with-result-cache ,cache-id
+                           #'(lambda () ,@body)
+                           ,@(and younger-than-p `(:younger-than ,younger-than))))
+
+
+(defun format-date (destination date-control-string universal-time
+                    &optional (time-zone nil time-zone-supplied-p))
+  (with-result-cache ((format nil "date-format-~D-~A-~A"
+                              universal-time date-control-string time-zone)
+                      :younger-than (compute-script-last-modified-date))
+    (apply #'%real-format-date
+           destination date-control-string universal-time
+           (and time-zone-supplied-p time-zone))))
+

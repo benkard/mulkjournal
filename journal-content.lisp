@@ -143,11 +143,56 @@
         (apply #'make-instance 'journal-entry :file filename data)))))
 
 
+(defun find-journal-entry-files ()
+  (let ((journal-entry-files (list)))
+    (when (file-exists-p *entry-dir*)
+      (walk-directory *entry-dir*
+                      #'(lambda (x)
+                          (push x journal-entry-files))
+                      :test (complement #'directory-pathname-p)))
+    journal-entry-files))
+
+
+(defun read-journal-entries ()
+  (let ((journal-entry-files (find-journal-entry-files)))
+    (sort (mapcar #'read-journal-entry journal-entry-files)
+          #'>=
+          :key #'id-of)))
+
+
 (defun compute-journal-last-modified-date ()
   #-clisp (get-universal-time)
   #+clisp
-  (loop for file in (list* *script-filename*                    ;; journal.cgi
-                           (merge-pathnames (make-pathname :type "lisp")
-                                            *script-filename*)  ;; journal.lisp
-                           (find-journal-entry-files))
-        maximize (posix:file-stat-mtime (posix:file-stat file))))
+  (max (compute-script-last-modified-date)
+       (loop for file in (find-journal-entry-files)
+              maximize (posix:file-stat-mtime (posix:file-stat file)))))
+
+
+(defun write-out-entry (entry)
+  (assert (file-of entry))
+  (with-open-file (out (file-of entry) :direction :output
+                                       :if-exists :supersede
+                                       :external-format #+clisp charset:utf-8
+                                                        #+sbcl :utf-8)
+    (with-slots (id uuid date last-modification body title categories comments)
+        entry
+      (write `(:id ,id
+               :uuid ,uuid
+               :date ,date
+               :last-modification ,last-modification
+               :title ,title
+               :categories ,categories
+               :body ,body
+               :comments ,(loop for comment in comments
+                             collect
+                               (with-slots (id uuid date author body email
+                                            website)
+                                   comment
+                                 `(:id ,id
+                                   :uuid ,uuid
+                                   :date ,date
+                                   :author ,author
+                                   :email ,email
+                                   :website ,website
+                                   :body ,body))))
+             :stream out))))
