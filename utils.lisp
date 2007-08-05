@@ -49,22 +49,22 @@
 
 (defun fixup-markdown-output (markup)
   ;; No, cl-markdown is certainly not perfect.
-  ;;
-  ;; First, convert "<a ...> bla</a>" into " <a ...>bla</a>" (note the
-  ;; excess space to the right of the opening tag in the unprocessed
-  ;; string, which we move to the left of the same opening tag, where we
-  ;; expect it to make more sense in the general case).
-  (loop
-     for matches = (ppcre:all-matches "<a [^>]*?> " markup)
-     while (not (null matches))
-     do (progn
-          (setf markup
-                (replace markup markup :start1 (1+ (first matches))
-                                       :end1 (second matches)
-                                       :start2 (first matches)
-                                       :end2 (1- (second matches))))
-          (setf (elt markup (first matches)) #\Space)))
-  markup)
+  (reduce #'(lambda (string thing)
+              (destructuring-bind (regex . replacement)
+                  thing
+                (ppcre:regex-replace-all regex
+                                         string
+                                         replacement)))
+          (load-time-value
+           (mapcar #'(lambda (thing)
+                       (destructuring-bind (regex . replacement)
+                           thing
+                         (cons (ppcre:create-scanner regex) replacement)))
+                   '(;; "<em>...</em> ." -> "<em>...</em>."
+                     ("(</[^>]*?>) \\." . "\\1.")
+                     ;; "<a ...> bla</a>" -> " <a ...>bla</a>"
+                     ("(<a [^>]*?>) "   . "\\1"))))
+          :initial-value markup))
 
 
 (defun name-of-day (day-of-week)
