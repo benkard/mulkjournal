@@ -196,7 +196,7 @@
      (<:form :action (link-to :view :post-id (id-of journal-entry))
              :method "post"
              :accept-charset "UTF-8"
-      (<:div :style "display: hidden"
+      (<:div :style "display: none"
        (<:input :type "hidden"
                 :name "id"
                 :value (prin1-to-string (id-of journal-entry)))
