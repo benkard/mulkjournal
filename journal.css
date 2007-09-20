@@ -58,6 +58,7 @@ div.JOURNAL-ENTRY > h2 {
 
 div.JOURNAL-ENTRY {
   border: 3px outset #666;
+  color: #000;
   background-color: #f8f8e0;
   margin: 1em 0 0 0;
   padding: 0 0.3em 0 0.3em;
