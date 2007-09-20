@@ -48,6 +48,7 @@
 
 (defun show-atom-feed ()
   (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+  (http-add-header "Content-Language" "de")
   (http-send-headers "application/atom+xml; charset=UTF-8")
 
   (flet ((atom-time (time)
@@ -237,9 +238,11 @@
   ;;       feel slower to the end user rather than faster.
   ;;
   ;; (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+  (http-add-header "Content-Language" "de")
   (http-send-headers "text/html; charset=UTF-8")
 
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
+          :lang "de"
    (<:head
     (<:title
      (<:as-html
