@@ -178,7 +178,7 @@
           (<:div :class :journal-comment-header
            (<:as-html (format nil "(~A) "
                               (format-date nil "%day.%mon.%yr, %hr:%min" date)))
-           (<:a :href website
+           (<:a :href website :rel "nofollow"
             (<:as-html (format nil "~A" author)))
            (<:as-html " meint: "))
           (<:div :class :journal-comment-body
@@ -190,6 +190,9 @@
      (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
                     ver&ouml;ffentlicht werden und nur von Matthias eingesehen
                     werden k&ouml;nnen."))
+     (<:p (<:strong "Hinweis an Spammer: ")
+          (<:as-is "Hyperlinks werden so erzeugt, da&szlig; sie von Suchmaschinen
+                    nicht beachtet werden.  Sparen Sie sich also die M&uuml;he."))
      (<:form :action (link-to :view :post-id (id-of journal-entry))
              :method "post"
              :accept-charset "UTF-8"
