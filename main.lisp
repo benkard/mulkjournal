@@ -28,18 +28,14 @@
          (*debugging-p*     (eq *site* :mst-plus))
          (*query*           #+clisp (mapcan #'(lambda (param)
                                                 (list (keywordify param)
-                                                      (ext:convert-string-from-bytes
-                                                       (ext:convert-string-to-bytes
-                                                        (http-query-parameter param)
-                                                        charset:iso-8859-1)
-                                                       charset:utf-8)))
+                                                      (http-query-parameter param)))
                                             (http-query-parameter-list))
                             #-clisp '())
          (*http-env*        (http-get-env-vars))
          (*subpath-query*   (subseq (gethash "REQUEST_URI" *http-env*)
-                                    (length (if (eq *site* :mst-plus)
-                                                (gethash "SCRIPT_NAME" *http-env*)
-                                                "/journal"))))
+                                    (length (ecase *site*
+                                              (:mst-plus (gethash "SCRIPT_NAME" *http-env*))
+                                              (:nfs.net "/journal")))))
          (*subpath-string*  (subseq *subpath-query*
                                     0
                                     (or (position #\? *subpath-query*)
@@ -59,15 +55,22 @@
                                  "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi")))
          (*script-dir*      (make-pathname
                              :directory (pathname-directory *script-filename*)))
-         (*data-dir*        (if (eq *site* :mst-plus)
-                                *script-dir*
-                                #p"/home/protected/journal/"))
+         (*data-dir*        (ecase *site*
+                              (:mst-plus *script-dir*)
+                              (:nfs.net #p"/home/protected/journal/")))
          (*cache-dir*       (merge-pathnames #p"cache/" *data-dir*))
-         (database-file     (merge-pathnames #p"journal.sqlite3" *data-dir*)))
+         (database-file     (merge-pathnames #p"journal.sqlite3" *data-dir*))
+         (sqlite-library    (merge-pathnames #p"libsqlite3.so"
+                                             (ecase *site*
+                                               (:mst-plus #p"/usr/lib/")
+                                               (:nfs.net #p"/usr/local/lib/")))))
+    (clsql:push-library-path *script-dir*)
+    (clsql:push-library-path #p"/usr/local/lib/")
+    (push *script-dir* clsql-sys:*foreign-library-search-paths*)
     (clsql-uffi::load-uffi-foreign-library)
     (uffi:load-foreign-library (merge-pathnames "clsql_uffi.so"
                                                 *script-dir*))
-    (uffi:load-foreign-library #p"/usr/lib/libsqlite3.so")
+    (uffi:load-foreign-library sqlite-library)
     (clsql:with-database (db (list (namestring database-file))
                              :database-type :sqlite3
                              :make-default t)
@@ -77,10 +80,10 @@
 
 #+clisp
 (defun journal-main ()
-  (with-initialised-journal
-    (let ((*random-state* (make-random-state t)))
-      (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
-                                              :charset charset:utf-8)))
+  (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
+                                          :charset charset:utf-8)))
+    (with-initialised-journal
+      (let ((*random-state* (make-random-state t)))
         (case *action*
           (:post-comment   (with-transaction ()
                              (let* ((entry (find-entry *post-number*))

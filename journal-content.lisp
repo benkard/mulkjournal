@@ -77,8 +77,7 @@
        :db-constraints :not-null
        :accessor id-of
        :initarg :id)
-   (entry-id :db-kind :key
-             :type integer
+   (entry-id :type integer
              :db-constraints :not-null
              :accessor id-of
              :initarg :entry-id)

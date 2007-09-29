@@ -195,7 +195,10 @@
                     nicht beachtet werden.  Sparen Sie sich also die M&uuml;he."))
      (<:form :action (link-to :view :post-id (id-of journal-entry))
              :method "post"
-             :accept-charset "UTF-8"
+             :accept-charset #+(or) "ISO-10646-UTF-1"
+                             "UTF-8"
+             :enctype #+(or) "multipart/form-data"
+                      "application/x-www-form-urlencoded"
       (<:div :style "display: none"
        (<:input :type "hidden"
                 :name "id"
