@@ -145,12 +145,11 @@
 (defmethod comments-about ((journal-entry journal-entry) &key ordered-p)
   #.(locally-enable-sql-reader-syntax)
   (prog1 (if ordered-p
-             (mapcar #'car
-                     (select 'journal-comment 'journal-entry
-                             :where [= [slot-value 'journal-comment 'entry-id]
-                                       [slot-value 'journal-entry 'id]]
-                             :order-by '([journal-comment.date])
-                             :flatp t))
+             (select 'journal-comment
+                     :where [= [slot-value 'journal-comment 'entry-id]
+                            (id-of journal-entry)]
+                     :order-by '([date])
+                     :flatp t)
              (%comments-about journal-entry))
     #.(restore-sql-reader-syntax-state)))
 

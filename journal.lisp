@@ -170,8 +170,7 @@
   (when (and comments-p (not (null (comments-about journal-entry))))
     (<:div :class :journal-comments
      (<:h2 "Kommentare")
-     (dolist (comment (comments-about journal-entry
-                                      :ordered-p t))
+     (dolist (comment (comments-about journal-entry :ordered-p t))
        (with-slots (author body date id email website)
            comment
          (<:div :class :journal-comment
