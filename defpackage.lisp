@@ -23,4 +23,5 @@
 (defpackage #:mulk.journal
   (:nicknames #:journal)
   (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http #:alexandria
-        #:xml-emitter #:split-sequence))
+        #:xml-emitter #:split-sequence #:clsql)
+  (:shadow #:format-date))

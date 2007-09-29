@@ -24,83 +24,173 @@
 
 
 ;;; (@* "Class definitions")
-(defclass journal-entry ()
-  ((id :type (integer 0)
+(clsql:def-view-class journal-entry ()
+  ((id :db-kind :key
+       :type integer
+       :db-constraints :not-null
        :accessor id-of
        :initarg :id)
-   (uuid :type string
+   (uuid :type (string 36)
+         :db-constraints :not-null
          :accessor uuid-of
          :initarg :uuid)
-   (file :type (or null pathname)
-         :accessor file-of
-         :initarg :file)
    (title :type string
+          :db-constraints :not-null
           :accessor title-of
           :initarg :title
           :initform "")
-   (date :type (integer 0)
+   (date :type universal-time
+         :db-constraints :not-null
          :accessor date-of
          :initarg :date)
-   (last-modification :type (or null (integer 0))
+   (last-modification :type integer
                       :accessor last-modification-of
                       :initarg :last-modification
                       :initform nil)
    (body :type string
+         :db-constraints :not-null
          :accessor body-of
          :initarg :body
          :initform "")
-   (categories :type list
+   (categories :db-kind :join
+               :db-constraints :not-null
                :accessor categories-of
                :initarg :categories
-               :initform '())
-   (comments :type list
-             :accessor comments-about
+               :initform '()
+               :db-info (:join-class journal-category
+                         :home-key id
+                         :foreign-key entry-id
+                         :set t))
+   (comments :db-kind :join
+             :db-constraints :not-null
+             :accessor %comments-about
              :initarg :comments
-             :initform '())))
+             :db-info (:join-class journal-comment
+                       :home-key id
+                       :foreign-key entry-id
+                       :set t))))
 
 
-(defclass journal-comment ()
-  ((id :type (integer 0)
+(clsql:def-view-class journal-comment ()
+  ((id :db-kind :key
+       :type integer
+       :db-constraints :not-null
        :accessor id-of
        :initarg :id)
-   (uuid :type string
+   (entry-id :db-kind :key
+             :type integer
+             :db-constraints :not-null
+             :accessor id-of
+             :initarg :entry-id)
+   (entry :db-kind :join
+          :db-constraints :not-null
+          :accessor entry-of
+          :initarg :entries
+          :initform '()
+          :db-info (:join-class journal-entry
+                    :home-key entry-id
+                    :foreign-key id
+                    :set nil))
+   (uuid :type (string 36)
+         :db-constraints :not-null
          :accessor uuid-of
          :initarg :uuid)
-   (date :type (integer 0)
+   (date :type universal-time
+         :db-constraints :not-null
          :accessor date-of
          :initarg :date)
    (body :type string
+         :db-constraints :not-null
          :accessor body-of
          :initarg :body
          :initform "")
-   (author :type (or null string)
+   (author :type string
            :accessor author-of
            :initarg :author
            :initform nil)
-   (email :type (or null string)
+   (email :type string
           :accessor email-of
           :initarg :email
           :initform nil)
-   (website :type (or null string)
+   (website :type string
             :accessor website-of
             :initarg :website
             :initform nil)))
 
 
+(clsql:def-view-class journal-category ()
+  ((id :db-kind :key
+       :type integer
+       :db-constraints :not-null
+       :accessor id-of
+       :initarg :id)
+   (uuid :type (string 36)
+         :db-constraints :not-null
+         :accessor uuid-of
+         :initarg :uuid)
+   (entries :db-kind :join
+            :db-constraints :not-null
+            :accessor entries-in
+            :initarg :entries
+            :initform '()
+            :db-info (:join-class journal-entry
+                      :home-key id
+                      :foreign-key catogory-ids
+                      :set t))))
+
+
 ;; (@* "Journal entry operations")
-(defmethod shared-initialize ((journal-entry journal-entry) slot-names
-                              &key)
-  (with-slots (id) journal-entry
-    (when (or (eq slot-names t)
-              (member 'id slot-names))
-      (setf id (1+ (reduce #'max *journal-entries*
-                           :key #'id-of
-                           :initial-value -1)))))
-  (call-next-method))
+(defgeneric comments-about (thing &key ordered-p))
+(defgeneric (setf comments-about) (new-value thing &key ordered-p))
+
+(defmethod comments-about ((journal-entry journal-entry) &key ordered-p)
+  #.(locally-enable-sql-reader-syntax)
+  (prog1 (if ordered-p
+             (mapcar #'car
+                     (select 'journal-comment 'journal-entry
+                             :where [= [slot-value 'journal-comment 'entry-id]
+                                       [slot-value 'journal-entry 'id]]
+                             :order-by '([journal-comment.date])
+                             :flatp t))
+             (%comments-about journal-entry))
+    #.(restore-sql-reader-syntax-state)))
+
+
+(defmethod (setf comments-about) (new-value
+                                  (journal-entry journal-entry)
+                                  &key ordered-p)
+  (declare (ignore ordered-p))
+  (setf (%comments-about journal-entry) new-value))
+
+
+(defun make-journal-entry-id ()
+  #.(locally-enable-sql-reader-syntax)
+  (prog1
+      (1+ (or (single-object (select [max [slot-value 'journal-entry 'id]]
+                                     :from [journal-entry]
+                                     :flatp t))
+              -1))
+    #.(restore-sql-reader-syntax-state)))
+
+
+(defun make-journal-comment-id ()
+  #.(locally-enable-sql-reader-syntax)
+  (prog1
+      (1+ (or (single-object (select [max [slot-value 'journal-comment 'id]]
+                                     :from [journal-comment]
+                                     :flatp t))
+              -1))
+    #.(restore-sql-reader-syntax-state)))
 
 
 (defun find-entry (number)
-  (find number *journal-entries* :key #'id-of))
+  #.(locally-enable-sql-reader-syntax)
+  (prog1
+    (single-object (select 'journal-entry
+                           :where [= [slot-value 'journal-entry 'id] number]
+                           :flatp t)
+                   nil)
+    #.(restore-sql-reader-syntax-state)))
 
 
 (defun journal-markup->html (markup)
@@ -126,73 +216,12 @@
            (markdown markup :stream s))))))
 
 
-(defun read-journal-entry (filename)
-  (with-open-file (file filename :direction :input
-                                 :external-format #+clisp charset:utf-8
-                                                  #+sbcl :utf-8)
-    (let ((*read-eval* nil))
-      (let ((data (read file)))
-        (let ((comments (member :comments data)))
-          (when comments
-            (setf (second comments)
-                  (mapcar #'(lambda (comment-record)
-                              (apply #'make-instance
-                                     'journal-comment
-                                     comment-record))
-                          (second comments)))))
-        (apply #'make-instance 'journal-entry :file filename data)))))
-
-
-(defun find-journal-entry-files ()
-  (let ((journal-entry-files (list)))
-    (when (file-exists-p *entry-dir*)
-      (walk-directory *entry-dir*
-                      #'(lambda (x)
-                          (push x journal-entry-files))
-                      :test (complement #'directory-pathname-p)))
-    journal-entry-files))
-
-
-(defun read-journal-entries ()
-  (let ((journal-entry-files (find-journal-entry-files)))
-    (sort (mapcar #'read-journal-entry journal-entry-files)
-          #'>=
-          :key #'id-of)))
-
-
 (defun compute-journal-last-modified-date ()
+  #.(locally-enable-sql-reader-syntax)
   #-clisp (get-universal-time)
   #+clisp
   (max (compute-script-last-modified-date)
-       (loop for file in (find-journal-entry-files)
-              maximize (posix:file-stat-mtime (posix:file-stat file)))))
-
-
-(defun write-out-entry (entry)
-  (assert (file-of entry))
-  (with-open-file (out (file-of entry) :direction :output
-                                       :if-exists :supersede
-                                       :external-format #+clisp charset:utf-8
-                                                        #+sbcl :utf-8)
-    (with-slots (id uuid date last-modification body title categories comments)
-        entry
-      (write `(:id ,id
-               :uuid ,uuid
-               :date ,date
-               :last-modification ,last-modification
-               :title ,title
-               :categories ,categories
-               :body ,body
-               :comments ,(loop for comment in comments
-                             collect
-                               (with-slots (id uuid date author body email
-                                            website)
-                                   comment
-                                 `(:id ,id
-                                   :uuid ,uuid
-                                   :date ,date
-                                   :author ,author
-                                   :email ,email
-                                   :website ,website
-                                   :body ,body))))
-             :stream out))))
+       (select [max [slot-value 'journal-entry 'last-modification]])
+       (select [max [slot-value 'journal-entry 'date]])
+       (select [max [slot-value 'journal-comment 'date]]))
+  #.(restore-sql-reader-syntax-state))

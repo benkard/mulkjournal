@@ -47,6 +47,7 @@
 
 
 (defun show-atom-feed ()
+  #.(locally-enable-sql-reader-syntax)
   (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-add-header "Content-Language" "de")
   (http-send-headers "application/atom+xml; charset=UTF-8")
@@ -60,18 +61,16 @@
       (with-tag ("feed" '(("xmlns" "http://www.w3.org/2005/Atom")))
         (emit-simple-tags :title "Kompottkins Weisheiten"
                           :updated (atom-time
-                                    (max (reduce #'max *journal-entries*
-                                                 :key #'date-of
-                                                 :initial-value 0)
-                                         (reduce #'(lambda (x y)
-                                                     (cond ((and x y)
-                                                            (max x y))
-                                                           (x x)
-                                                           (y y)
-                                                           (t 0)))
-                                                 *journal-entries*
-                                                 :key #'last-modification-of
-                                                 :initial-value 0)))
+                                    (max (or (single-object
+                                               (select [max [slot-value 'journal-entry 'date]]
+                                                       :from [journal-entry]
+                                                       :flatp t))
+                                             0)
+                                         (or (single-object
+                                               (select [max [slot-value 'journal-entry 'last-modification]]
+                                                       :from [journal-entry]
+                                                       :flatp t))
+                                             0)))
                           :id "urn:uuid:88ad4730-90bc-4cc1-9e1f-d4cdb9ce177c")
         (with-tag ("subtitle")
           (xml-as-is "Geschwafel eines libert&#xE4;rsozialistischen Geeks"))
@@ -84,9 +83,9 @@
                             ("type" "application/atom+xml")
                             ("href" ,(link-to :view-atom-feed :absolute t)))))
 
-        (dolist (journal-entry (sort (copy-list *journal-entries*)
-                                     #'>
-                                     :key #'date-of))
+        (dolist (journal-entry (select 'journal-entry
+                                       :order-by '(([date] :desc))
+                                       :flatp t))
           (with-slots (title date body categories last-modification id)
               journal-entry
             (with-tag ("entry")
@@ -104,7 +103,8 @@
                                      ("xml:lang" "de")
                                      ("xml:base" ,(link-to :index :absolute t))))
                 (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                  (xml-as-is (journal-markup->html (body-of journal-entry))))))))))))
+                  (xml-as-is (journal-markup->html (body-of journal-entry)))))))))))
+  #.(restore-sql-reader-syntax-state))
 
 
 (let ((scanner (ppcre:create-scanner "(\\n|\\r|\\r\\n)(\\n|\\r|\\r\\n)+")))
@@ -170,9 +170,8 @@
   (when (and comments-p (not (null (comments-about journal-entry))))
     (<:div :class :journal-comments
      (<:h2 "Kommentare")
-     (dolist (comment (sort (copy-list (comments-about journal-entry))
-                            #'<
-                            :key #'date-of))
+     (dolist (comment (comments-about journal-entry
+                                      :ordered-p t))
        (with-slots (author body date id email website)
            comment
          (<:div :class :journal-comment
@@ -233,6 +232,7 @@
 
 
 (defun show-web-journal ()
+  #.(locally-enable-sql-reader-syntax)
   ;; TODO: Check how to make Squid not wait for the CGI script's
   ;;       termination, which makes generating a Last-Modified header
   ;;       feel slower to the end user rather than faster.
@@ -273,9 +273,8 @@
     (<:div :id :contents
      (case *action*
        ((:index nil)
-        (mapc #'show-journal-entry (sort (copy-list *journal-entries*)
-                                         #'>
-                                         :key #'date-of)))
+        (mapc #'show-journal-entry
+              (select 'journal-entry :order-by '(([date] :desc)) :flatp t)))
        ((:view :post-comment)
         (show-journal-entry (find-entry *post-number*) :comments-p t))))
     (<:div :id :navigation))
@@ -292,5 +291,6 @@
              (<:hr)
              (<:h2 (<:as-html x))
              (<:p "Type " (<:em (<:as-html (type-of y))) ".")
-             (<:pre (<:as-html (prin1-to-string y))))))))
+             (<:pre (<:as-html (prin1-to-string y)))))))
+  #.(restore-sql-reader-syntax-state))
 

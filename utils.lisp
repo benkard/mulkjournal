@@ -197,3 +197,9 @@ ELEMENT-TYPE as the stream's."
            destination date-control-string universal-time
            (and time-zone-supplied-p time-zone))))
 
+
+(defun single-object (list &optional (errorp t))
+  (assert (null (cdr list)))
+  (when errorp
+    (assert (not (null list))))
+  (first list))

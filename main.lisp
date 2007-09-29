@@ -59,10 +59,20 @@
                                  "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi")))
          (*script-dir*      (make-pathname
                              :directory (pathname-directory *script-filename*)))
-         (*cache-dir*       (merge-pathnames #p"cache/" *script-dir*))
-         (*entry-dir*       (merge-pathnames #p"journal-entries/" *script-dir*))
-         (*journal-entries* (read-journal-entries)))
-    (funcall func)))
+         (*data-dir*        (if (eq *site* :mst-plus)
+                                *script-dir*
+                                #p"/home/protected/journal/"))
+         (*cache-dir*       (merge-pathnames #p"cache/" *data-dir*))
+         (database-file     (merge-pathnames #p"journal.sqlite3" *data-dir*)))
+    (clsql-uffi::load-uffi-foreign-library)
+    (uffi:load-foreign-library (merge-pathnames "clsql_uffi.so"
+                                                *script-dir*))
+    (uffi:load-foreign-library #p"/usr/lib/libsqlite3.so")
+    (clsql:with-database (db (list (namestring database-file))
+                             :database-type :sqlite3
+                             :make-default t)
+      (assert db)
+      (funcall func))))
 
 
 #+clisp
@@ -72,19 +82,21 @@
       (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
                                               :charset charset:utf-8)))
         (case *action*
-          (:post-comment   (let ((entry (find-entry *post-number*)))
-                             (push (make-instance 'journal-comment
-                                    :id (1+ (reduce #'max (comments-about entry)
-                                                    :key #'id-of
-                                                    :initial-value -1))
-                                    :uuid    (make-uuid)
-                                    :date    (get-universal-time)
-                                    :author  (getf *query* :author)
-                                    :email   (getf *query* :email)
-                                    :website (getf *query* :website)
-                                    :body    (getf *query* :comment-body))
-                                   (comments-about entry))
-                             (write-out-entry entry))
+          (:post-comment   (with-transaction ()
+                             (let* ((entry (find-entry *post-number*))
+                                    (comment
+                                     (make-instance 'journal-comment
+                                        :id       (make-journal-comment-id)
+                                        :uuid     (make-uuid)
+                                        :entry-id (id-of entry)
+                                        :date     (get-universal-time)
+                                        :author   (getf *query* :author)
+                                        :email    (getf *query* :email)
+                                        :website  (getf *query* :website)
+                                        :body     (getf *query* :comment-body))))
+                               (push comment (comments-about entry))
+                               (update-records-from-instance comment)
+                               (update-records-from-instance entry)))
                            (show-web-journal))
           (:view-atom-feed (show-atom-feed))
           (otherwise       (show-web-journal)))))))

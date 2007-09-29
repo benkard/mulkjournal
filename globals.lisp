@@ -57,14 +57,11 @@
 
 (defparameter *script-filename* nil)
 
-(defparameter *journal-entries* nil
-  "A list of JOURNAL-ENTRY objects.")
-
 (defparameter *script-dir* nil
   "The directory which all the Lisp code lives in.")
 
+(defparameter *data-dir* nil
+  "The directory which all the journal data lives in.")
+
 (defparameter *cache-dir* nil
   "The directory used for caching generated markup.")
-
-(defparameter *entry-dir* nil
-  "The directory containing the journal entry data files.")
