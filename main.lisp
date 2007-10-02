@@ -48,6 +48,7 @@
          (*action*          (or (keywordify (getf *query* :action))
                                 (cond (*post-number*                      :view)
                                       ((string= "feed" (first *subpath*)) :view-atom-feed)
+                                      ((string= "debug" (first *subpath*)) :view-debugging-page)
                                       (t                                  nil))))
          (*method*          (keywordify (gethash "REQUEST_METHOD" *http-env*)))
          (*script-filename* (pathname-as-file
@@ -102,6 +103,7 @@
                                (update-records-from-instance entry)))
                            (show-web-journal))
           (:view-atom-feed (show-atom-feed))
+          (:view-debugging-page (show-debugging-page))
           (otherwise       (show-web-journal)))))))
 
 

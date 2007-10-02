@@ -288,7 +288,8 @@
                              ("Query" . ,*query*)
                              ("Query string" . ,(http-get-query-string))
                              ("Subpath" . ,*subpath*)
-                             ("Environment" . ,(http-get-env-vars)))
+                             ("Environment" . ,(http-get-env-vars))
+                             #+clisp ("Environment #2" . ,(ext:getenv)))
          do (<:p
              (<:hr)
              (<:h2 (<:as-html x))
@@ -296,3 +297,23 @@
              (<:pre (<:as-html (prin1-to-string y)))))))
   #.(restore-sql-reader-syntax-state))
 
+
+(defun show-debugging-page ()
+  (http-add-header "Content-Language" "de")
+  (http-send-headers "text/html; charset=UTF-8")
+
+  (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
+          :lang "de"
+    (when *debugging-p*
+      (loop for (x . y) in `(("Action" . ,*action*)
+                             ("Request method" . ,*method*)
+                             ("Query" . ,*query*)
+                             ("Query string" . ,(http-get-query-string))
+                             ("Subpath" . ,*subpath*)
+                             ("Environment" . ,(http-get-env-vars))
+                             #+clisp ("Environment #2" . ,(ext:getenv)))
+            do (<:p
+                 (<:hr)
+                 (<:h2 (<:as-html x))
+                 (<:p "Type " (<:em (<:as-html (type-of y))) ".")
+                 (<:pre (<:as-html (prin1-to-string y))))))))
