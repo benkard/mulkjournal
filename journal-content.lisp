@@ -219,7 +219,19 @@
   #-clisp (get-universal-time)
   #+clisp
   (max (compute-script-last-modified-date)
-       (select [max [slot-value 'journal-entry 'last-modification]])
-       (select [max [slot-value 'journal-entry 'date]])
-       (select [max [slot-value 'journal-comment 'date]]))
+       (or (single-object
+            (select [max [slot-value 'journal-entry 'last-modification]]
+                    :from [journal-entry]
+                    :flatp t))
+           0)
+       (or (single-object
+            (select [max [slot-value 'journal-entry 'date]]
+                    :from [journal-entry]
+                    :flatp t))
+           0)
+       (or (single-object
+            (select [max [slot-value 'journal-comment 'date]]
+                    :from [journal-comment]
+                    :flatp t))
+           0))
   #.(restore-sql-reader-syntax-state))
