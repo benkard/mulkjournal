@@ -192,26 +192,28 @@
 
 
 (defun journal-markup->html (markup)
-  (if (string= "" markup)
-      markup
-      (handler-bind
-          ((error   ;; method-call-type-error or not
-            ;; Work around a weird bug in cl-markdown or CLISP.  (I
-            ;; don't know which.)
-            #'(lambda (c)
-                (declare (ignore c))
-                #+nil (<:as-html
-                       (with-output-to-string (s)
-                         (system::pretty-print-condition c s)))
-                (invoke-restart 'return nil))))
-        (fixup-markdown-output
-         (with-output-to-string (s)
-           ;; Normally, we shouldn't need to create our own stream to
-           ;; write into, but this is, of course, yet another
-           ;; CLISP/Markdown hack, because Markdown's default
-           ;; *OUTPUT-STREAM* seems to spontaneously close itself, making
-           ;; everything break when Markdown tries to render more stuff.
-           (markdown markup :stream s))))))
+  (with-result-cache ((format nil "markup-~A" (sxhash markup))
+                      :younger-than (compute-script-last-modified-date))
+    (if (string= "" markup)
+        markup
+        (handler-bind
+            ((error ;; method-call-type-error or not
+              ;; Work around a weird bug in cl-markdown or CLISP.  (I
+              ;; don't know which.)
+              #'(lambda (c)
+                  (declare (ignore c))
+                  #+nil (<:as-html
+                         (with-output-to-string (s)
+                           (system::pretty-print-condition c s)))
+                  (invoke-restart 'return nil))))
+          (fixup-markdown-output
+           (with-output-to-string (s)
+             ;; Normally, we shouldn't need to create our own stream to
+             ;; write into, but this is, of course, yet another
+             ;; CLISP/Markdown hack, because Markdown's default
+             ;; *OUTPUT-STREAM* seems to spontaneously close itself, making
+             ;; everything break when Markdown tries to render more stuff.
+             (markdown markup :stream s)))))))
 
 
 (defun compute-journal-last-modified-date ()
