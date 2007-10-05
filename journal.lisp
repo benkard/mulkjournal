@@ -38,9 +38,12 @@
       (case action
         (:index "")
         (:view-atom-feed (values "/feed"))
-        (:view (values "/~D" post-id))
-        (:edit (values "/~D?action=edit" post-id))
+        (:view (if post-id
+                   (values "/~D" post-id)
+                   "/"))
+        ((:edit :preview) (values "/~D/preview" post-id))
         (:post-comment (values "/~D" post-id))
+        (:save (values "/~D/save" post-id))
         (:css (if (eq *site* :mst-plus)
                   "/../../journal.css"
                   "/../journal.css"))))))
@@ -120,20 +123,29 @@
 
 
 (defun show-journal-entry (journal-entry &key (comments-p nil))
+  (with-slots (id title body categories date) journal-entry
+     (show-journal-entry-with-components id title body categories date
+                                         (comments-about journal-entry
+                                                         :ordered-p t)
+                                         comments-p)))
+
+
+(defun show-journal-entry-with-components (id title body categories
+                                           posting-date comments comments-p)
   (<:div :class :journal-entry
-   (<:h2 (<:a :href (link-to :view :post-id (id-of journal-entry))
-              (<:as-html (title-of journal-entry))))
+   (<:h2 (<:a :href (link-to :view :post-id id)
+              (<:as-html title)))
     (<:div :class :journal-entry-header
      (<:span :class :journal-entry-date
       (<:as-html
        (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%2min."
-                    (date-of journal-entry))))
-     (unless (null (categories-of journal-entry))
+                    posting-date)))
+     (unless (null categories)
        (<:span :class :journal-entry-category
         (<:as-html
          (format nil "Abgeheftet unter ...")))))
     (<:div :class :journal-entry-body
-     (<:as-is (journal-markup->html (body-of journal-entry))))
+     (<:as-is (journal-markup->html body)))
     (<:div :class :journal-entry-footer
      (<:form :class :journal-entry-delete-button-form
              :style "display: inline;"
@@ -145,32 +157,29 @@
                 :value "delete")
        (<:input :type "hidden"
                 :name "id"
-                :value (prin1-to-string (id-of journal-entry)))
+                :value (prin1-to-string id))
        (<:button :type "submit"
                  (<:as-is "L&ouml;schen"))))
      " | "
-     (<:form :class :journal-entry-delete-button-form
+     (<:form :class :journal-entry-edit-button-form
              :style "display: inline;"
              :method "get"
-             :action (link-to :index)
+             :action (link-to :edit :post-id id)
       (<:div :style "display: inline;"
        (<:input :type "hidden"
-                :name "action"
-                :value "edit")
-       (<:input :type "hidden"
                 :name "id"
-                :value (prin1-to-string (id-of journal-entry)))
+                :value (prin1-to-string id))
        (<:button :type "submit"
                  (<:as-is "Bearbeiten"))))
      " | "
-     (<:a :href (link-to :view :post-id (id-of journal-entry))
+     (<:a :href (link-to :view :post-id id)
           (<:as-is
-           (format nil "~D Kommentar~:*~[e~;~:;e~]" (length (comments-about journal-entry)))))))
+           (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments))))))
 
-  (when (and comments-p (not (null (comments-about journal-entry))))
+  (when (and comments-p (not (null comments)))
     (<:div :class :journal-comments
      (<:h2 "Kommentare")
-     (dolist (comment (comments-about journal-entry :ordered-p t))
+     (dolist (comment comments)
        (with-slots (author body date id email website)
            comment
          (<:div :class :journal-comment
@@ -192,7 +201,7 @@
      (<:p (<:strong "Hinweis an Spammer: ")
           (<:as-is "Hyperlinks werden so erzeugt, da&szlig; sie von Suchmaschinen
                     nicht beachtet werden.  Sparen Sie sich also die M&uuml;he."))
-     (<:form :action (link-to :view :post-id (id-of journal-entry))
+     (<:form :action (link-to :view :post-id id)
              :method "post"
              :accept-charset #+(or) "ISO-10646-UTF-1"
                              "UTF-8"
@@ -201,7 +210,7 @@
       (<:div :style "display: none"
        (<:input :type "hidden"
                 :name "id"
-                :value (prin1-to-string (id-of journal-entry)))
+                :value (prin1-to-string id))
        (<:input :type "hidden"
                 :name "action"
                 :value "post-comment"))
@@ -233,8 +242,7 @@
         (<:as-is "Ver&ouml;ffentlichen")))))))
 
 
-(defun show-web-journal ()
-  #.(locally-enable-sql-reader-syntax)
+(defun call-with-web-journal (page-title thunk)
   ;; TODO: Check how to make Squid not wait for the CGI script's
   ;;       termination, which makes generating a Last-Modified header
   ;;       feel slower to the end user rather than faster.
@@ -248,9 +256,8 @@
    (<:head
     (<:title
      (<:as-html
-      (if (member *action* '(:view :edit :preview :post-comment))
-          (format nil "~A -- Kompottkins Weisheiten"
-                  (title-of (find-entry *post-number*)))
+      (if page-title
+          (format nil "~A -- Kompottkins Weisheiten" page-title)
           "Kompottkins Weisheiten")))
     (<:link :rel "alternate"
             :type "application/atom+xml"
@@ -273,17 +280,13 @@
           "NEU!  Jetzt mit mehr als 3 % Uptime!")))
       (<:as-is " &bull;&bull;&bull;")))
     (<:div :id :contents
-     (case *action*
-       ((:index nil)
-        (mapc #'show-journal-entry
-              (select 'journal-entry :order-by '(([date] :desc)) :flatp t)))
-       ((:view :post-comment)
-        (show-journal-entry (find-entry *post-number*) :comments-p t))))
+     (funcall thunk))
     (<:div :id :navigation))
 
 
     (when *debugging-p*
       (loop for (x . y) in `(("Action" . ,*action*)
+                             ("Entry ID" . ,*post-number*)
                              ("Request method" . ,*method*)
                              ("Query" . ,*query*)
                              ("Query string" . ,(http-get-query-string))
@@ -294,8 +297,85 @@
              (<:hr)
              (<:h2 (<:as-html x))
              (<:p "Type " (<:em (<:as-html (type-of y))) ".")
-             (<:pre (<:as-html (prin1-to-string y)))))))
+             (<:pre (<:as-html (prin1-to-string y))))))))
+
+
+(defun show-web-journal ()
+  #.(locally-enable-sql-reader-syntax)
+  (with-web-journal ((if (member *action* '(:view :edit :preview :post-comment
+                                            :save-entry))
+                         (title-of (find-entry *post-number*))
+                         nil))
+    (case *action*
+      ((:index nil)
+       (mapc #'show-journal-entry
+             (select 'journal-entry :order-by '(([date] :desc)) :flatp t)))
+      ((:view :post-comment :save-entry)
+       (show-journal-entry (find-entry *post-number*) :comments-p t))))
   #.(restore-sql-reader-syntax-state))
+
+
+(defun preview-entry (title body id)
+  (with-web-journal (title)
+    (<:form :action (link-to :save :post-id id)
+            :method "post"
+            :accept-charset "UTF-8"
+            :enctype "application/x-www-form-urlencoded"
+      (when id
+        (<:input :type "hidden"
+                 :name "id"
+                 :value (prin1-to-string id)))
+      (<:input :type "hidden"
+               :name "title"
+               :value title)
+      (<:input :type "hidden"
+               :name "body"
+               :value body)
+      (<:div
+       (<:button :type "submit"
+        (<:as-is "Ver&ouml;ffentlichen"))))
+    (show-journal-entry-with-components (or id -1)
+                                        title
+                                        body
+                                        nil
+                                        (get-universal-time)
+                                        nil
+                                        nil)
+    ;; Editor here.
+    (<:form :action (link-to :preview :post-id id)
+            :method "post"
+            :accept-charset "UTF-8"
+            :enctype "application/x-www-form-urlencoded"
+      (<:div :style "display: none"
+       (when id
+         (<:input :type "hidden"
+                  :name "id"
+                  :value (prin1-to-string id))))
+      (<:div :style "display: table"
+       (<:div :style "display: table-row"
+        (<:div :style "display: table-cell; vertical-align: top"
+         (<:label :for "entry-title-editor"
+                  :style "vertical-align: top"
+          (<:as-is "&Uuml;berschrift: ")))
+        (<:div :style "display: table-cell;"
+         (<:input :type "text"
+                  :name "title"
+                  :value title
+                  :id "entry-title-editor")))
+       (<:div :style "display: table-row"
+        (<:div :style "display: table-cell; vertical-align: top"
+         (<:label :for "entry-body-editor"
+                  :style "vertical-align: top"
+          (<:as-html "Kommentar: ")))
+        (<:div :style "display: table-cell"
+         (<:textarea :name "body"
+                     :id "entry-body-editor"
+                     :rows 20
+                     :cols 65
+           (<:as-html body)))))
+      (<:div
+       (<:button :type "submit"
+        (<:as-is "Vorschau"))))))
 
 
 (defun show-debugging-page ()
@@ -306,6 +386,7 @@
           :lang "de"
     (when *debugging-p*
       (loop for (x . y) in `(("Action" . ,*action*)
+                             ("Entry ID" . ,*post-number*)
                              ("Request method" . ,*method*)
                              ("Query" . ,*query*)
                              ("Query string" . ,(http-get-query-string))

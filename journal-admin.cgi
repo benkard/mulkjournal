@@ -8,4 +8,4 @@ else
     LISPINIT_DIR=/home/protected/journal
 fi
 
-exec clisp -M "$LISPINIT_DIR/lispinit.mem.gz" "$DIR/run.lisp"
+exec clisp -M "$LISPINIT_DIR/lispinit.mem.gz" "$DIR/run.lisp" --admin-mode

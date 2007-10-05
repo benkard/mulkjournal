@@ -46,9 +46,11 @@
                                                (getf *query* :id ""))
                                            :junk-allowed t  #|| :radix 12 ||#))
          (*action*          (or (keywordify (getf *query* :action))
-                                (cond (*post-number*                      :view)
-                                      ((string= "feed" (first *subpath*)) :view-atom-feed)
+                                (cond ((string= "feed" (first *subpath*)) :view-atom-feed)
                                       ((string= "debug" (first *subpath*)) :view-debugging-page)
+                                      ((string= "preview" (car (last *subpath*))) :preview-entry)
+                                      ((string= "save" (car (last *subpath*))) :save-entry)
+                                      (*post-number*                      :view)
                                       (t                                  nil))))
          (*method*          (keywordify (gethash "REQUEST_METHOD" *http-env*)))
          (*script-filename* (pathname-as-file
@@ -79,32 +81,72 @@
       (funcall func))))
 
 
+(defun dispatch-admin-action ()
+  (case *action*
+    (:preview-entry (let ((entry (and *post-number*
+                                      (find-entry *post-number*))))
+                      (preview-entry (or (getf *query* :title nil)
+                                         (and entry (title-of entry))
+                                         "")
+                                     (or (getf *query* :body nil)
+                                         (and entry (body-of entry))
+                                         "")
+                                     *post-number*)))
+    (:save-entry (with-transaction ()
+                   (let* ((entry (if *post-number*
+                                     (find-entry *post-number*)
+                                     (make-instance 'journal-entry
+                                        :id (make-journal-entry-id)
+                                        :uuid (make-uuid)
+                                        :date (get-universal-time)
+                                        :last-modification nil
+                                        :categories ()
+                                        :comments ()))))
+                     (when *post-number*
+                       (setf (last-modification-of entry)
+                             (get-universal-time)))
+                     (setf *post-number* (id-of entry))
+                     (setf (body-of entry) (getf *query* :body)
+                           (title-of entry) (getf *query* :title))
+                     (update-records-from-instance entry)))
+                 (show-web-journal))
+    (otherwise (show-web-journal))))
+
+
+(defun dispatch-user-action ()
+  (case *action*
+    (:post-comment   (with-transaction ()
+                       (let* ((entry (find-entry *post-number*))
+                              (comment
+                               (make-instance 'journal-comment
+                                  :id       (make-journal-comment-id)
+                                  :uuid     (make-uuid)
+                                  :entry-id (id-of entry)
+                                  :date     (get-universal-time)
+                                  :author   (getf *query* :author)
+                                  :email    (getf *query* :email)
+                                  :website  (getf *query* :website)
+                                  :body     (getf *query* :comment-body))))
+                         (push comment (comments-about entry))
+                         (update-records-from-instance comment)
+                         (update-records-from-instance entry)))
+                     (show-web-journal))
+    (:view-atom-feed (show-atom-feed))
+    (:view-debugging-page (show-debugging-page))
+    (otherwise       (show-web-journal))))
+
+
 #+clisp
 (defun journal-main ()
   (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
                                           :charset charset:utf-8)))
     (with-initialised-journal
       (let ((*random-state* (make-random-state t)))
-        (case *action*
-          (:post-comment   (with-transaction ()
-                             (let* ((entry (find-entry *post-number*))
-                                    (comment
-                                     (make-instance 'journal-comment
-                                        :id       (make-journal-comment-id)
-                                        :uuid     (make-uuid)
-                                        :entry-id (id-of entry)
-                                        :date     (get-universal-time)
-                                        :author   (getf *query* :author)
-                                        :email    (getf *query* :email)
-                                        :website  (getf *query* :website)
-                                        :body     (getf *query* :comment-body))))
-                               (push comment (comments-about entry))
-                               (update-records-from-instance comment)
-                               (update-records-from-instance entry)))
-                           (show-web-journal))
-          (:view-atom-feed (show-atom-feed))
-          (:view-debugging-page (show-debugging-page))
-          (otherwise       (show-web-journal)))))))
+        (if (member "--admin-mode"
+                    (coerce (ext:argv) 'list)
+                    :test #'string=)
+            (dispatch-admin-action)
+            (dispatch-user-action))))))
 
 
 #+clisp

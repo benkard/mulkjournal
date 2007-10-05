@@ -34,6 +34,10 @@
   (emit-close-tag "html"))
 
 
+(defmacro with-web-journal ((page-title) &body body)
+  `(call-with-web-journal ,page-title #'(lambda () ,@body)))
+
+
 (defmacro with-result-cache ((cache-id &key (younger-than nil younger-than-p))
                              &body body)
   `(call-with-result-cache ,cache-id
