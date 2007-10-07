@@ -126,7 +126,8 @@
   (with-slots (id title body categories date) journal-entry
      (show-journal-entry-with-components id title body categories date
                                          (comments-about journal-entry
-                                                         :ordered-p t)
+                                                         :ordered-p t
+                                                         :ham-p t)
                                          comments-p)))
 
 

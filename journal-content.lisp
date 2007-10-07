@@ -154,15 +154,25 @@
 (defgeneric comments-about (thing &key ordered-p))
 (defgeneric (setf comments-about) (new-value thing &key ordered-p))
 
-(defmethod comments-about ((journal-entry journal-entry) &key ordered-p)
+(defmethod comments-about ((journal-entry journal-entry) &key ordered-p ham-p)
   #.(locally-enable-sql-reader-syntax)
   (prog1 (if ordered-p
-             (select 'journal-comment
-                     :where [= [slot-value 'journal-comment 'entry-id]
-                            (id-of journal-entry)]
-                     :order-by '([date])
-                     :flatp t)
-             (%comments-about journal-entry))
+             (if ham-p
+                 (select 'journal-comment
+                         :where [and [= [slot-value 'journal-comment 'entry-id]
+                                        (id-of journal-entry)]
+                                     [not [= [slot-value 'journal-comment 'spam-p]
+                                             "t"]]]
+                         :order-by '([date])
+                         :flatp t)
+                 (select 'journal-comment
+                         :where [= [slot-value 'journal-comment 'entry-id]
+                                   (id-of journal-entry)]
+                         :order-by '([date])
+                         :flatp t))
+             (if ham-p
+                 (remove-if #'spamp (%comments-about journal-entry))
+                 (%comments-about journal-entry)))
     #.(restore-sql-reader-syntax-state)))
 
 
