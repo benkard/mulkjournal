@@ -79,17 +79,17 @@
        :initarg :id)
    (entry-id :type integer
              :db-constraints :not-null
-             :accessor id-of
+             :accessor entry-id-of
              :initarg :entry-id)
    (entry :db-kind :join
           :db-constraints :not-null
           :accessor entry-of
           :initarg :entries
-          :initform '()
           :db-info (:join-class journal-entry
                     :home-key entry-id
                     :foreign-key id
-                    :set nil))
+                    :set nil
+                    :retrieval :immediate))
    (uuid :type (string 36)
          :db-constraints :not-null
          :accessor uuid-of
@@ -114,7 +114,19 @@
    (website :type string
             :accessor website-of
             :initarg :website
-            :initform nil)))
+            :initform nil)
+   (spam-p :type boolean
+           :accessor spamp
+           :initarg :spamp
+           :initform :spamp)
+   (submitter-ip :type string
+                 :db-constraints :not-null
+                 :accessor submitter-ip
+                 :initarg :submitter-ip)
+   (submitter-user-agent :type string
+                         :db-constraints :not-null
+                         :accessor submitter-user-agent
+                         :initarg :submitter-user-agent)))
 
 
 (clsql:def-view-class journal-category ()

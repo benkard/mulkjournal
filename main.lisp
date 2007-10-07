@@ -62,6 +62,10 @@
                               (:mst-plus *script-dir*)
                               (:nfs.net #p"/home/protected/journal/")))
          (*cache-dir*       (merge-pathnames #p"cache/" *data-dir*))
+         (*wordpress-key*   (with-open-file (file (merge-pathnames
+                                                   "wordpress-api-key.key"
+                                                   *data-dir*))
+                              (read-line file)))
          (database-file     (merge-pathnames #p"journal.sqlite3" *data-dir*))
          (sqlite-library    (merge-pathnames #p"libsqlite3.so"
                                              (ecase *site*
@@ -126,8 +130,35 @@
                                   :author   (getf *query* :author)
                                   :email    (getf *query* :email)
                                   :website  (getf *query* :website)
-                                  :body     (getf *query* :comment-body))))
+                                  :body     (getf *query* :comment-body)
+                                  :submitter-ip (gethash "REMOTE_ADDR" *http-env*)
+                                  :submitter-user-agent (gethash "HTTP_USER_AGENT" *http-env*))))
                          (push comment (comments-about entry))
+                         (with-slots (spam-p) comment
+                           (setq spam-p (detect-spam comment
+                                                     :referrer (gethash "HTTP_REFERER" *http-env*)))
+                           (when spam-p
+                             (push (format nil
+                                    "<p>Ihr Kommentar wurde als ~
+                                     m&ouml;gliche unerw&uuml;nschte ~
+                                     Werbung (Spam) klassifiert.  Der ~
+                                     Inhaber dieses Journals wird Ihre ~
+                                     Nachricht manuell moderieren ~
+                                     m&uuml;ssen, weshalb eine ~
+                                     Ver&ouml;ffentlichung noch etwas ~
+                                     auf sich warten lassen kann.</p> ~
+                                     ~
+                                     <p>Wenn Sie ganz sichergehen ~
+                                     wollen, da&szlig; Ihr Beitrag ~
+                                     ver&ouml;ffentlicht wird, dann ~
+                                     k&ouml;nnen Sie versuchen, ihn ~
+                                     abzu&auml;ndern und erneut ~
+                                     einzuschicken.</p>~
+                                     ~
+                                     <p>Hinweis: Diese Website verwendet ~
+                                     <a href=\"http://akismet.com/\">Akismet</a> ~
+                                     f&uuml;r die Spamerkennung.</p>")
+                                     *journal-warnings*)))
                          (update-records-from-instance comment)
                          (update-records-from-instance entry)))
                      (show-web-journal))

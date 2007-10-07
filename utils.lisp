@@ -203,3 +203,45 @@ ELEMENT-TYPE as the stream's."
   (when errorp
     (assert (not (null list))))
   (first list))
+
+
+(defun akismet-login ()
+  (drakma:http-request "http://rest.akismet.com/1.1/verify-key"
+                       :protocol :http/1.0
+                       :method :post
+                       :user-agent "Mulk Journal/0.0.1"
+                       :parameters `(("key" . ,*wordpress-key*)
+                                     ("blog" . "http://matthias.benkard.de/journal"))))
+
+
+(defun akismet-check-comment (comment referrer)
+  #.(locally-enable-sql-reader-syntax)
+  (prog1
+      (with-slots (submitter-user-agent submitter-ip body author website entry-id)
+                  comment
+         (drakma:http-request (format nil "http://~A.rest.akismet.com/1.1/comment-check" *wordpress-key*)
+                              :protocol :http/1.0
+                              :method :post
+                              :user-agent "Mulk Journal/0.0.1"
+                              :parameters `(("blog" . "http://matthias.benkard.de/journal")
+                                            ("user_ip" . ,submitter-ip)
+                                            ("user_agent" . ,submitter-user-agent)
+                                            ,@(when referrer
+                                                `(("referrer" . ,referrer)))
+                                            ("permalink" . ,(link-to :view
+                                                                     :post-id (first
+                                                                               (select [id]
+                                                                                       :from [journal-entry]
+                                                                                       :where [= [id] entry-id]
+                                                                                       :flatp t))))
+                                            ("comment_type" . "comment")
+                                            ("comment_author" . ,author)
+                                            ("comment_author_url" . ,website)
+                                            ("comment_content" . ,body))))
+    #.(restore-sql-reader-syntax-state)))
+
+
+(defun detect-spam (comment &key referrer)
+  (ignore-errors
+    (akismet-login)
+    (string= "true" (akismet-check-comment comment referrer))))

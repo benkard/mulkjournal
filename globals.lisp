@@ -65,3 +65,9 @@
 
 (defparameter *cache-dir* nil
   "The directory used for caching generated markup.")
+
+(defparameter *wordpress-key* nil
+  "The WordPress/Akismet API key to use.")
+
+(defparameter *journal-warnings* nil
+  "Warnings that should be displayed to the user.")

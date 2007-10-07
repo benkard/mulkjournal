@@ -198,9 +198,14 @@
      (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
                     ver&ouml;ffentlicht werden und nur von Matthias eingesehen
                     werden k&ouml;nnen."))
-     (<:p (<:strong "Hinweis an Spammer: ")
-          (<:as-is "Hyperlinks werden so erzeugt, da&szlig; sie von Suchmaschinen
-                    nicht beachtet werden.  Sparen Sie sich also die M&uuml;he."))
+     (<:p (<:strong "Hinweise: ")
+          "Diese Website verwendet "
+          (<:a :href "http://akismet.com/" "Akismet")
+          " zur Spamerkennung. "
+          (<:as-is "E-Mail-Adressen werden auch gegen&uuml;ber Akismet
+                    unter Verschlu&szlig; gehalten.  Nur unformatierter
+                    Text ist erlaubt.  Leerzeilen trennen
+                    Abs&auml;tze."))
      (<:form :action (link-to :view :post-id id)
              :method "post"
              :accept-charset #+(or) "ISO-10646-UTF-1"
@@ -279,6 +284,12 @@
           "NEU!  Jetzt ohne regelm&auml;&szlig;ige Serverabst&uuml;rze!"
           "NEU!  Jetzt mit mehr als 3 % Uptime!")))
       (<:as-is " &bull;&bull;&bull;")))
+    (when *journal-warnings*
+      (<:div :id :warnings
+       (dolist (warning *journal-warnings*)
+         (<:div :class :journal-warning
+          (<:p (<:strong "Achtung!"))
+          (<:as-is warning)))))
     (<:div :id :contents
      (funcall thunk))
     (<:div :id :navigation))

@@ -100,3 +100,20 @@ img.JOURNAL-ENTRY-PORTRAIT {
   text-align: justify;
   text-indent: 1em;
 }
+
+#WARNINGS {
+  align: center;
+  width: 100%;
+}
+
+.JOURNAL-WARNING {
+  position: relative;
+  left: 15%;
+  width: 70%;
+  border: 3px outset #666;
+  color: #000;
+  background-color: #ffd0c0;
+  margin: 1em 0 0 0;
+  padding: 0 0.3em 0 0.3em;
+  text-align: justify;
+}

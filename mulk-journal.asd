@@ -25,7 +25,8 @@
   :licence     "Affero General Public License, version 1 or higher"
   :depends-on  (#:cl-ppcre #:cl-fad #:iterate #:cl-markdown #:parenscript
                 #:yaclml #:lisp-cgi-utils #:alexandria #:xml-emitter
-                #:split-sequence #:clsql #:clsql-uffi #:clsql-sqlite3)
+                #:split-sequence #:clsql #:clsql-uffi #:clsql-sqlite3
+                #:drakma)
   :components  ((:file "defpackage")
                 (:file "macros")
                 (:file "globals")
