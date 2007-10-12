@@ -160,7 +160,9 @@
                                      f&uuml;r die Spamerkennung.</p>")
                                      *journal-warnings*)))
                          (update-records-from-instance comment)
-                         (update-records-from-instance entry)))
+                         (update-records-from-instance entry)
+                         (when (eq *site* :nfs.net)
+                           (mail-comment *notification-email* comment entry))))
                      (show-web-journal))
     (:view-atom-feed (show-atom-feed))
     (:view-debugging-page (show-debugging-page))
@@ -169,15 +171,19 @@
 
 #+clisp
 (defun journal-main ()
-  (ext:letf ((custom:*terminal-encoding* (ext:make-encoding
-                                          :charset charset:utf-8)))
-    (with-initialised-journal
-      (let ((*random-state* (make-random-state t)))
-        (if (member "--admin-mode"
-                    (coerce (ext:argv) 'list)
-                    :test #'string=)
-            (dispatch-admin-action)
-            (dispatch-user-action))))))
+  (let ((encoding (ext:make-encoding :charset charset:utf-8)))
+    (ext:letf* ((custom:*terminal-encoding* encoding)
+                (custom:*foreign-encoding* encoding)
+                (custom:*misc-encoding* encoding)
+                (custom:*pathname-encoding* encoding)
+                (custom:*default-file-encoding* encoding))
+      (with-initialised-journal
+        (let ((*random-state* (make-random-state t)))
+          (if (member "--admin-mode"
+                      (coerce (ext:argv) 'list)
+                      :test #'string=)
+              (dispatch-admin-action)
+              (dispatch-user-action)))))))
 
 
 #+clisp

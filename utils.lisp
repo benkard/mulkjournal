@@ -245,3 +245,75 @@ ELEMENT-TYPE as the stream's."
   (ignore-errors
     (akismet-login)
     (string= "true" (akismet-check-comment comment referrer))))
+
+
+(defun mail (address subject body)
+  #-clisp
+  (cerror "Can't send e-mail on this Lisp implementation.")
+  #+clisp
+  (let ((sendmail-stdin (ext:run-program "sendmail"
+                                         :arguments (list address)
+                                         :wait t
+                                         :output nil
+                                         :input :stream)))
+    (format sendmail-stdin "~&To: ~A~
+                            ~&MIME-Version: 1.0~
+                            ~&Content-type: text/plain; charset=utf-8~
+                            ~&Content-transfer-encoding: quoted-printable~
+                            ~&Subject: =?utf-8?Q?~A?=~
+                            ~&~%~
+                            ~&~A"
+            address
+            (quote-printable subject nil)
+            (quote-printable body t))
+    (close sendmail-stdin)))
+
+
+(defun char-octets (string-designator)
+  #-clisp
+  (error "Can't convert strings to byte vectors on this Lisp implementation.")
+  #+clisp
+  (ext:convert-string-to-bytes (string string-designator)
+                               custom:*default-file-encoding*))
+
+
+(let ((printable-chars
+       ;; This list is incomplete, but that doesn't hurt.
+       (cons #\Newline
+             (coerce "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.-!~"
+                     'list))))
+  (defun quote-printable (text line-breaks-p)
+    (with-output-to-string (out)
+      (let ((i 0))
+        (loop for char across text
+              do (if (member char printable-chars)
+                     (princ char out)
+                     (loop for byte across (char-octets char)
+                           do (format out "=~2,'0X" byte)))
+              when (and line-breaks-p (= i 73))
+                do (progn
+                     (princ #\= out)
+                     (terpri out)
+                     (setq i 0))
+              else
+                do (incf i))))))
+
+
+(defun mail-comment (address comment entry)
+  (mail address
+        (format nil "[Kommentar] ~A" (title-of entry))
+        (format nil "~&Kommentar von: ~A~
+                     ~&E-Mail: ~A~
+                     ~&Website: ~A~
+                     ~&IP-Adresse: ~A~
+                     ~&Webbrowser: ~A~
+                     ~&Als Spam erkannt: ~A~
+                     ~&~%~
+                     ~&~A"
+                (author-of comment)
+                (email-of comment)
+                (website-of comment)
+                (submitter-ip comment)
+                (submitter-user-agent comment)
+                (spamp comment)
+                (body-of comment))))
