@@ -278,7 +278,15 @@ ELEMENT-TYPE as the stream's."
 
 
 (let ((printable-chars
-       ;; This list is incomplete, but that doesn't hurt.
+       ;; This list is incomplete, which shouldn't hurt.
+       ;;
+       ;; Note that the list is designed to be compatible with both the
+       ;; Quoted-Printable and Q encodings.  Even though
+       ;; Quoted-Printable itself specifies #\_, #\?, #\= and #\Space as
+       ;; representing themselves, they may not be left unencoded here
+       ;; because of this.  On the other hand, #\_ cannot be assumed to
+       ;; encode #\Space, either, because this is only specified by Q,
+       ;; not by Quoted-Printable.
        (cons #\Newline
              (coerce "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.-!~"
                      'list))))
