@@ -1,5 +1,5 @@
 /* CSS version 3.0 */
-/* Copyright 2007, Matthias Andreas Benkard. */
+/* Copyright 2007, 2008, Matthias Andreas Benkard. */
 
 /*-----------------------------------------------------------------------
  * This file is part of The Mulkblog Project.
@@ -69,6 +69,10 @@ div.JOURNAL-ENTRY-BODY p {
   text-indent: 1em;
 }
 
+.JOURNAL-ENTRY-BODY blockquote {
+  font-style: oblique;
+}
+
 img.JOURNAL-ENTRY-PORTRAIT {
   margin-right: 6px;
   margin-bottom: 6px;
@@ -99,6 +103,10 @@ img.JOURNAL-ENTRY-PORTRAIT {
 .JOURNAL-COMMENT-BODY {
   text-align: justify;
   text-indent: 1em;
+}
+
+.JOURNAL-COMMENT-BODY blockquote {
+  font-style: oblique;
 }
 
 #WARNINGS {
