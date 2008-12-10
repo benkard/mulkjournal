@@ -153,39 +153,41 @@
        (<:span :class :journal-entry-category
         (<:as-html
          (format nil "Abgeheftet unter ...")))))
-    (<:div :class :journal-entry-body
-     (<:as-is (journal-markup->html body)))
+    (when *full-entry-view*
+      (<:div :class :journal-entry-body
+       (<:as-is (journal-markup->html body))))
     (<:div :class :journal-entry-footer
-     (<:form :class :journal-entry-delete-button-form
-             :style "display: inline;"
-             :method "post"
-             :action (link-to :index)
-      (<:div :style "display: inline;"
-       (<:input :type "hidden"
-                :name "action"
-                :value "delete")
-       (<:input :type "hidden"
-                :name "id"
-                :value (prin1-to-string id))
-       (<:button :type "submit"
-                 (<:as-is "L&ouml;schen"))))
-     " | "
-     (<:form :class :journal-entry-edit-button-form
-             :style "display: inline;"
-             :method "get"
-             :action (link-to :edit :post-id id)
-      (<:div :style "display: inline;"
-       (<:input :type "hidden"
-                :name "id"
-                :value (prin1-to-string id))
-       (<:button :type "submit"
-                 (<:as-is "Bearbeiten"))))
-     " | "
+     (when *full-entry-view*
+       (<:form :class :journal-entry-delete-button-form
+               :style "display: inline;"
+               :method "post"
+               :action (link-to :index)
+        (<:div :style "display: inline;"
+         (<:input :type "hidden"
+                  :name "action"
+                  :value "delete")
+         (<:input :type "hidden"
+                  :name "id"
+                  :value (prin1-to-string id))
+         (<:button :type "submit"
+                   (<:as-is "L&ouml;schen"))))
+       " | "
+       (<:form :class :journal-entry-edit-button-form
+               :style "display: inline;"
+               :method "get"
+               :action (link-to :edit :post-id id)
+        (<:div :style "display: inline;"
+         (<:input :type "hidden"
+                  :name "id"
+                  :value (prin1-to-string id))
+         (<:button :type "submit"
+                   (<:as-is "Bearbeiten"))))
+       " | ")
      (<:a :href (link-to :view :post-id id)
           (<:as-is
            (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments))))))
 
-  (when (and comments-p (not (null comments)))
+  (when (and *full-entry-view* comments-p (not (null comments)))
     (<:div :class :journal-comments
      (<:h2 "Kommentare")
      (dolist (comment comments)
@@ -201,7 +203,7 @@
           (<:div :class :journal-comment-body
            (<:as-html (render-comment-body body))))))))
 
-  (when comments-p
+  (when (and *full-entry-view* comments-p)
     (<:div :class :journal-new-comment
      (<:h2 "Neuen Kommentar schreiben")
      (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
@@ -328,8 +330,13 @@
                          nil))
     (case *action*
       ((:index nil)
-       (mapc #'show-journal-entry
-             (select 'journal-entry :order-by '(([date] :desc)) :flatp t)))
+       (let ((number 0))
+         (dolist (entry (select 'journal-entry
+                                :order-by '(([date] :desc))
+                                :flatp t))
+           (incf number)
+           (let ((*full-entry-view* (< number 5)))
+             (show-journal-entry entry)))))
       ((:view :post-comment :save-entry)
        (show-journal-entry (find-entry *post-number*) :comments-p t))))
   #.(restore-sql-reader-syntax-state))

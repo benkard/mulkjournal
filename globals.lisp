@@ -74,3 +74,5 @@
 
 (defparameter *journal-warnings* nil
   "Warnings that should be displayed to the user.")
+
+(defparameter *full-entry-view* t)
