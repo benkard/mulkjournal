@@ -141,16 +141,16 @@
                                            posting-date comments comments-p)
   (<:div :class :journal-entry
    (<:h2 (<:a :href (link-to :view :post-id id)
-              (<:as-html title)))
-    (<:div :class :journal-entry-header
-     (<:span :class :journal-entry-date
-      (<:as-html
-       (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%2min."
-                    posting-date)))
-     (unless (null categories)
-       (<:span :class :journal-entry-category
-        (<:as-html
-         (format nil "Abgeheftet unter ...")))))
+    (<:as-html title)))
+   (<:div :class :journal-entry-header
+    (<:span :class :journal-entry-date
+     (<:as-html
+      (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%2min."
+                   posting-date)))
+    (unless (null categories)
+      (<:span :class :journal-entry-category
+       (<:as-html
+        (format nil "Abgeheftet unter ...")))))
     (when *full-entry-view*
       (<:div :class :journal-entry-body
        (<:as-is (journal-markup->html body))))
