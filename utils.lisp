@@ -195,7 +195,7 @@ ELEMENT-TYPE as the stream's."
                       :younger-than (compute-script-last-modified-date))
     (apply #'%real-format-date
            destination date-control-string universal-time
-           (and time-zone-supplied-p time-zone))))
+           (and time-zone-supplied-p (list time-zone)))))
 
 
 (defun single-object (list &optional (errorp t))
