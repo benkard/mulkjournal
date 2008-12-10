@@ -86,27 +86,32 @@
                             ("type" "application/atom+xml")
                             ("href" ,(link-to :view-atom-feed :absolute t)))))
 
-        (dolist (journal-entry (select 'journal-entry
-                                       :order-by '(([date] :desc))
-                                       :flatp t))
-          (with-slots (title date body categories last-modification id)
-              journal-entry
-            (with-tag ("entry")
-              (emit-simple-tags :title title
-                                :id (format nil "urn:uuid:~(~A~)"
-                                            (uuid-of journal-entry))
-                                :updated (atom-time (or last-modification date))
-                                :published (atom-time date))
-              (with-tag ("link" `(("rel" "alternate")
-                                  ("type" "text/html")
-                                  ("href" ,(link-to :view
-                                                    :post-id id
-                                                    :absolute t)))))
-              (with-tag ("content" `(("type" "xhtml")
-                                     ("xml:lang" "de")
-                                     ("xml:base" ,(link-to :index :absolute t))))
-                (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                  (xml-as-is (journal-markup->html (body-of journal-entry)))))))))))
+        (let ((number 0))
+          (dolist (journal-entry (select 'journal-entry
+                                         :order-by '(([date] :desc))
+                                         :flatp t))
+            (incf number)
+            (with-slots (title date body categories last-modification id)
+                        journal-entry
+               (with-tag ("entry")
+                 (emit-simple-tags :title title
+                                   :id (format nil "urn:uuid:~(~A~)"
+                                               (uuid-of journal-entry))
+                                   :updated (atom-time (or last-modification date))
+                                   :published (atom-time date))
+                 (with-tag ("link" `(("rel" "alternate")
+                                     ("type" "text/html")
+                                     ("href" ,(link-to :view
+                                                       :post-id id
+                                                       :absolute t)))))
+                 (unless (> number 8)
+                   ;; We only include the body for the most recent
+                   ;; posts in order to save bandwidth.
+                   (with-tag ("content" `(("type" "xhtml")
+                                          ("xml:lang" "de")
+                                          ("xml:base" ,(link-to :index :absolute t))))
+                     (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
+                       (xml-as-is (journal-markup->html (body-of journal-entry)))))))))))))
   #.(restore-sql-reader-syntax-state))
 
 
