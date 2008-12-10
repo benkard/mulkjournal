@@ -140,22 +140,36 @@
 (defun show-journal-entry-with-components (id title body categories
                                            posting-date comments comments-p)
   (<:div :class :journal-entry
-   (<:h2 (<:a :href (link-to :view :post-id id)
-    (<:as-html title)))
-   (<:div :class :journal-entry-header
-    (<:span :class :journal-entry-date
-     (<:as-html
-      (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%2min."
-                   posting-date)))
-    (unless (null categories)
-      (<:span :class :journal-entry-category
+   (unless *full-entry-view*
+     (<:h2 :style "display: inline;  border: none;"
+      (<:a :href (link-to :view :post-id id)
+       (<:as-html title)))
+     (<:div :style "display: inline;  text-align: right;  padding: 0 3em 0 3em;"
+      (<:a :href (link-to :view :post-id id)
+       (<:as-is
+        (format nil "(~D Kommentar~:*~[e~;~:;e~])" (length comments)))))
+     (<:div :class :journal-entry-date
+      (<:as-html
+       (format-date nil " %day.%mon.%yr, %hr:%2min "
+                    posting-date))))
+   (when *full-entry-view*
+     (<:h2 (<:a :href (link-to :view :post-id id)
+            (<:as-html title))))
+   (when *full-entry-view*
+     (<:div :class :journal-entry-header
+      (<:span :class :journal-entry-date
        (<:as-html
-        (format nil "Abgeheftet unter ...")))))
+        (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%2min."
+                     posting-date)))
+      (unless (null categories)
+        (<:span :class :journal-entry-category
+         (<:as-html
+          (format nil "Abgeheftet unter ..."))))))
     (when *full-entry-view*
       (<:div :class :journal-entry-body
        (<:as-is (journal-markup->html body))))
-    (<:div :class :journal-entry-footer
-     (when *full-entry-view*
+    (when *full-entry-view*
+      (<:div :class :journal-entry-footer
        (<:form :class :journal-entry-delete-button-form
                :style "display: inline;"
                :method "post"
@@ -180,10 +194,10 @@
                   :value (prin1-to-string id))
          (<:button :type "submit"
                    (<:as-is "Bearbeiten"))))
-       " | ")
-     (<:a :href (link-to :view :post-id id)
-          (<:as-is
-           (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments))))))
+       " | "
+       (<:a :href (link-to :view :post-id id)
+        (<:as-is
+         (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments)))))))
 
   (when (and *full-entry-view* comments-p (not (null comments)))
     (<:div :class :journal-comments
