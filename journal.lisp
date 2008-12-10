@@ -104,7 +104,10 @@
                                      ("href" ,(link-to :view
                                                        :post-id id
                                                        :absolute t)))))
-                 (unless (> number 8)
+                 (when (or (and last-modification
+                                (> last-modification (- (get-universal-time)
+                                                        (* 30 24 60 60))))
+                           (<= number 8))
                    ;; We only include the body for the most recent
                    ;; posts in order to save bandwidth.
                    (with-tag ("content" `(("type" "xhtml")
