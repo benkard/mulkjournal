@@ -24,4 +24,4 @@
   (:nicknames #:journal)
   (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http #:alexandria
         #:xml-emitter #:split-sequence #:clsql #:drakma)
-  (:shadow #:format-date))
+  (:shadow #:copy-file #:copy-stream #:format-date))
