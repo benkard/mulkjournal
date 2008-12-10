@@ -44,9 +44,7 @@
         ((:edit :preview) (values "/~D/preview" post-id))
         (:post-comment (values "/~D" post-id))
         (:save (values "/~D/save" post-id))
-        (:css (if (eq *site* :mst-plus)
-                  "/../../journal.css"
-                  "/../journal.css"))))))
+        (:css "/../journal.css")))))
 
 
 (defun show-atom-feed ()
