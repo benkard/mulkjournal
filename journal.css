@@ -125,3 +125,25 @@ img.JOURNAL-ENTRY-PORTRAIT {
   padding: 0 0.3em 0 0.3em;
   text-align: justify;
 }
+
+div.OLD-ENTRIES {
+  border: 3px outset #666;
+  color: #000;
+  background-color: #e8e8e8;
+  margin: 1em 0 0 0;
+  padding: 0 0.3em 0 0.3em;
+  text-align: justify;
+}
+
+table.OLD-ENTRY-TABLE {
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin: 0 0 0.3em 0;
+}
+
+table.OLD-ENTRY-TABLE td {
+  padding: 0.2em 0.4em 0.2em 0.4em;
+  vertical-align: top;
+  border: 1px solid #aaa;
+  margin: 0 0 0 0;
+}

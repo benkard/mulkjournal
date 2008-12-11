@@ -37,6 +37,7 @@
         #'(lambda (&rest args) (apply #'format out args))
       (case action
         (:index "")
+        (:full-index "/?full")
         (:view-atom-feed (values "/feed"))
         (:view (if post-id
                    (values "/~D" post-id)
@@ -139,23 +140,20 @@
 
 (defun show-journal-entry-with-components (id title body categories
                                            posting-date comments comments-p)
-  (<:div :class :journal-entry
-   (unless *full-entry-view*
-     (<:h2 :style "display: inline;  border: none;"
-      (<:a :href (link-to :view :post-id id)
-       (<:as-html title)))
-     (<:div :style "display: inline;  text-align: right;  padding: 0 3em 0 3em;"
-      (<:a :href (link-to :view :post-id id)
-       (<:as-is
-        (format nil "(~D Kommentar~:*~[e~;~:;e~])" (length comments)))))
-     (<:div :class :journal-entry-date
-      (<:as-html
-       (format-date nil " %day.%mon.%yr, %hr:%2min "
-                    posting-date))))
-   (when *full-entry-view*
+  (unless *full-entry-view*
+    (<:tr
+     (<:td (<:a :href (link-to :view :post-id id)
+            (<:as-html title)))
+     (<:td :style "text-align: right"
+      (<:as-is (format-date nil "%day.%mon.%yr,&nbsp;%hr:%2min" posting-date)))
+     (<:td (<:a :href (link-to :view :post-id id)
+            (<:as-is
+             (format nil "~D&nbsp;Kommentar~:*~[e~;~:;e~]" (length comments)))))))
+
+  (when *full-entry-view*
+    (<:div :class :journal-entry
      (<:h2 (<:a :href (link-to :view :post-id id)
-            (<:as-html title))))
-   (when *full-entry-view*
+            (<:as-html title)))
      (<:div :class :journal-entry-header
       (<:span :class :journal-entry-date
        (<:as-html
@@ -164,11 +162,9 @@
       (unless (null categories)
         (<:span :class :journal-entry-category
          (<:as-html
-          (format nil "Abgeheftet unter ..."))))))
-    (when *full-entry-view*
+          (format nil "Abgeheftet unter ...")))))
       (<:div :class :journal-entry-body
-       (<:as-is (journal-markup->html body))))
-    (when *full-entry-view*
+       (<:as-is (journal-markup->html body)))
       (<:div :class :journal-entry-footer
        (<:form :class :journal-entry-delete-button-form
                :style "display: inline;"
@@ -197,77 +193,77 @@
        " | "
        (<:a :href (link-to :view :post-id id)
         (<:as-is
-         (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments)))))))
+         (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments))))))
 
-  (when (and *full-entry-view* comments-p (not (null comments)))
-    (<:div :class :journal-comments
-     (<:h2 "Kommentare")
-     (dolist (comment comments)
-       (with-slots (author body date id email website)
-           comment
-         (<:div :class :journal-comment
-          (<:div :class :journal-comment-header
-           (<:as-html (format nil "(~A) "
-                              (format-date nil "%day.%mon.%yr, %hr:%min" date)))
-           (<:a :href website :rel "nofollow"
-            (<:as-html (format nil "~A" author)))
-           (<:as-html " meint: "))
-          (<:div :class :journal-comment-body
-           (<:as-html (render-comment-body body))))))))
+    (when (and comments-p (not (null comments)))
+      (<:div :class :journal-comments
+       (<:h2 "Kommentare")
+       (dolist (comment comments)
+         (with-slots (author body date id email website)
+             comment
+           (<:div :class :journal-comment
+            (<:div :class :journal-comment-header
+             (<:as-html (format nil "(~A) "
+                                (format-date nil "%day.%mon.%yr, %hr:%min" date)))
+             (<:a :href website :rel "nofollow"
+              (<:as-html (format nil "~A" author)))
+             (<:as-html " meint: "))
+            (<:div :class :journal-comment-body
+             (<:as-html (render-comment-body body))))))))
 
-  (when (and *full-entry-view* comments-p)
-    (<:div :class :journal-new-comment
-     (<:h2 "Neuen Kommentar schreiben")
-     (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
-                    ver&ouml;ffentlicht werden und nur von Matthias eingesehen
-                    werden k&ouml;nnen."))
-     (<:p (<:strong "Hinweise: ")
-          "Diese Website verwendet "
-          (<:a :href "http://akismet.com/" "Akismet")
-          " zur Spamerkennung. "
-          (<:as-is "E-Mail-Adressen werden auch gegen&uuml;ber Akismet
-                    unter Verschlu&szlig; gehalten.  Nur unformatierter
-                    Text ist erlaubt.  Leerzeilen trennen
-                    Abs&auml;tze."))
-     (<:form :action (link-to :view :post-id id)
-             :method "post"
-             :accept-charset #+(or) "ISO-10646-UTF-1"
-                             "UTF-8"
-             :enctype #+(or) "multipart/form-data"
-                      "application/x-www-form-urlencoded"
-      (<:div :style "display: none"
-       (<:input :type "hidden"
-                :name "id"
-                :value (prin1-to-string id))
-       (<:input :type "hidden"
-                :name "action"
-                :value "post-comment"))
-      (<:div :style "display: table"
-       (loop for (name . desc) in '(("author" . "Name (n&ouml;tig)")
-                                    ("email" . "E-Mail")
-                                    ("website" . "Website"))
-             do (<:div :style "display: table-row"
-                 (<:div :style "display: table-cell; vertical-align: top"
-                  (<:label :for name
-                           :style "vertical-align: top"
-                   (<:as-is (format nil "~A: " desc))))
-                 (<:div :style "display: table-cell;"
-                  (<:input :type "text"
-                           :name name
-                           :id name))))
-       (<:div :style "display: table-row"
-        (<:div :style "display: table-cell; vertical-align: top"
-         (<:label :for "comment-body"
-                  :style "vertical-align: top"
-          (<:as-html "Kommentar: ")))
-        (<:div :style "display: table-cell"
-         (<:textarea :name "comment-body"
-                     :id "comment-body"
-                     :rows 10
-                     :cols 40))))
-      (<:div
-       (<:button :type "submit"
-        (<:as-is "Ver&ouml;ffentlichen")))))))
+    (when comments-p
+      (<:div :class :journal-new-comment
+       (<:h2 "Neuen Kommentar schreiben")
+       (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
+                      ver&ouml;ffentlicht werden und nur von Matthias eingesehen
+                      werden k&ouml;nnen."))
+       (<:p (<:strong "Hinweise: ")
+            "Diese Website verwendet "
+            (<:a :href "http://akismet.com/" "Akismet")
+            " zur Spamerkennung. "
+            (<:as-is "E-Mail-Adressen werden auch gegen&uuml;ber Akismet
+                      unter Verschlu&szlig; gehalten.  Nur unformatierter
+                      Text ist erlaubt.  Leerzeilen trennen
+                      Abs&auml;tze."))
+       (<:form :action (link-to :view :post-id id)
+               :method "post"
+               :accept-charset #+(or) "ISO-10646-UTF-1"
+                               "UTF-8"
+               :enctype #+(or) "multipart/form-data"
+                        "application/x-www-form-urlencoded"
+        (<:div :style "display: none"
+         (<:input :type "hidden"
+                  :name "id"
+                  :value (prin1-to-string id))
+         (<:input :type "hidden"
+                  :name "action"
+                  :value "post-comment"))
+        (<:div :style "display: table"
+         (loop for (name . desc) in '(("author" . "Name (n&ouml;tig)")
+                                      ("email" . "E-Mail")
+                                      ("website" . "Website"))
+               do (<:div :style "display: table-row"
+                   (<:div :style "display: table-cell; vertical-align: top"
+                    (<:label :for name
+                             :style "vertical-align: top"
+                     (<:as-is (format nil "~A: " desc))))
+                   (<:div :style "display: table-cell;"
+                    (<:input :type "text"
+                             :name name
+                             :id name))))
+         (<:div :style "display: table-row"
+          (<:div :style "display: table-cell; vertical-align: top"
+           (<:label :for "comment-body"
+                    :style "vertical-align: top"
+            (<:as-html "Kommentar: ")))
+          (<:div :style "display: table-cell"
+           (<:textarea :name "comment-body"
+                       :id "comment-body"
+                       :rows 10
+                       :cols 40))))
+        (<:div
+         (<:button :type "submit"
+          (<:as-is "Ver&ouml;ffentlichen"))))))))
 
 
 (defun call-with-web-journal (page-title thunk)
@@ -342,13 +338,36 @@
                          nil))
     (case *action*
       ((:index nil)
-       (let ((number 0))
-         (dolist (entry (select 'journal-entry
-                                :order-by '(([date] :desc))
-                                :flatp t))
-           (incf number)
-           (let ((*full-entry-view* (< number 5)))
-             (show-journal-entry entry)))))
+       (let ((entries (select 'journal-entry
+                              :order-by '(([date] :desc))
+                              :flatp t))
+             (full-journal-view (or (equal (getf *query* :|| nil) "full")
+                                    (and (listp (getf *query* :|| nil))
+                                         (member "full"
+                                                 (getf *query* :|| nil)
+                                                 :test #'equal)))))
+         (dolist (entry (if full-journal-view
+                            entries
+                            (subseq entries 0 5)))
+           (let ((*full-entry-view* t))
+             (show-journal-entry entry)))
+         (unless full-journal-view
+           (<:div :class :old-entries
+            (<:h2 (<:as-is "&Auml;ltere Eintr&auml;ge"))
+            (<:p
+             (<:a :href (link-to :full-index)
+              (<:as-is "Alle Eintr&auml;ge vollst&auml;ndig anzeigen (langsam!).")))
+            (<:table :class :old-entry-table
+             (<:caption (<:as-is "Eintr&auml;ge nach Datum"))
+             (<:thead
+              (<:tr
+               (<:th (<:as-is "Titel"))
+               (<:th (<:as-is "Datum"))
+               (<:th (<:as-is "Kommentare"))))
+             (<:tbody
+              (dolist (entry entries)
+                (let ((*full-entry-view* nil))
+                  (show-journal-entry entry)))))))))
       ((:view :post-comment :save-entry)
        (show-journal-entry (find-entry *post-number*) :comments-p t))))
   #.(restore-sql-reader-syntax-state))
