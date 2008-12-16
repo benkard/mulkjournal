@@ -235,7 +235,8 @@
              ;; CLISP/Markdown hack, because Markdown's default
              ;; *OUTPUT-STREAM* seems to spontaneously close itself, making
              ;; everything break when Markdown tries to render more stuff.
-             (markdown markup :stream s)))))))
+             (markdown (remove #\Return markup)  ;<pre/> treats CR, LF as two line breaks.  Ouch.
+                       :stream s)))))))
 
 
 (defun compute-journal-last-modified-date ()
