@@ -184,7 +184,7 @@
                                           ("xml:lang" "de")
                                           ("xml:base" ,(link-to :index :absolute t))))
                      (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                       (xml-as-is (journal-markup->html (body-of journal-comment)))))))))))))
+                       (xml-as-is (journal-markup->html (body-of journal-entry)))))))))))))
   #.(restore-sql-reader-syntax-state))
 
 
