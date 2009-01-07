@@ -112,7 +112,10 @@
                                             ("xml:lang" "de")
                                             ("xml:base" ,(link-to :index :absolute t))))
                        (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                         (xml-as-is (journal-markup->html (body-of journal-comment))))))))))))))
+                         (xml-as-is
+                          (with-yaclml-output-to-string
+                            (<:as-html
+                             (render-comment-body body)))))))))))))))
   #.(restore-sql-reader-syntax-state))
 
 
@@ -181,9 +184,7 @@
                                           ("xml:lang" "de")
                                           ("xml:base" ,(link-to :index :absolute t))))
                      (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                       (xml-as-is (with-yaclml-output-to-string
-                                    (<:as-html
-                                     (render-comment-body (body-of journal-entry)))))))))))))))
+                       (xml-as-is (journal-markup->html (body-of journal-comment)))))))))))))
   #.(restore-sql-reader-syntax-state))
 
 
