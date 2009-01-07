@@ -1,5 +1,5 @@
 ;;;; -*- coding: utf-8; mode: lisp -*-
-;;;; Copyright 2007, Matthias Andreas Benkard.
+;;;; Copyright 2007-2009, Matthias Andreas Benkard.
 
 ;;;------------------------------------------------------------------------
 ;;; This file is part of The Mulkblog Project.
@@ -23,7 +23,7 @@
 (in-package #:mulk.journal)
 
 
-(defun link-to (action &key post-id (absolute nil))
+(defun link-to (action &key comment-id post-id (absolute nil))
   (with-output-to-string (out)
     (format out "~A" (if absolute
                          "http://matthias.benkard.de/journal"
@@ -39,13 +39,81 @@
         (:index "")
         (:full-index "/?full")
         (:view-atom-feed (values "/feed"))
-        (:view (if post-id
-                   (values "/~D" post-id)
-                   "/"))
+        (:view-comment-feed (values "/comment-feed"))
+        (:view (cond (comment-id (values "/~D#comment-~D" post-id comment-id))
+                     (post-id (values "/~D" post-id))
+                     (t "/")))
         ((:edit :preview) (values "/~D/preview" post-id))
         (:post-comment (values "/~D" post-id))
         (:save (values "/~D/save" post-id))
         (:css "/../journal.css")))))
+
+
+(defun show-comment-feed ()
+  #.(locally-enable-sql-reader-syntax)
+  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+  (http-add-header "Content-Language" "de")
+  (http-send-headers "application/atom+xml; charset=UTF-8")
+
+  (flet ((atom-time (time)
+           (format-date nil
+                        "%4yr-%2mon-%2dayT%2hr:%2min:%2secZ"
+                        time
+                        0)))
+    (with-xml-output (*standard-output* :encoding "utf-8")
+      (with-tag ("feed" '(("xmlns" "http://www.w3.org/2005/Atom")))
+        (emit-simple-tags :title "Kommentare &mdash; Kompottkins Weisheiten"
+                          :updated (atom-time
+                                    (max (or (single-object
+                                               (select [max [slot-value 'journal-entry 'date]]
+                                                       :from [journal-entry]
+                                                       :flatp t))
+                                             0)
+                                         (or (single-object
+                                               (select [max [slot-value 'journal-entry 'last-modification]]
+                                                       :from [journal-entry]
+                                                       :flatp t))
+                                             0)))
+                          :id "urn:uuid:9cd7a24c-10a6-4895-a97b-8df6b426e4a0")
+        (with-tag ("subtitle")
+          (xml-as-is "Geschwafel zum Geschwafel eines libert&#xE4;rsozialistischen Geeks"))
+        (with-tag ("author")
+          (emit-simple-tags :name "Various"))
+        (with-tag ("link" `(("rel" "alternate")
+                            ("type" "text/html")
+                            ("href" ,(link-to :index :absolute t)))))
+        (with-tag ("link" `(("rel" "self")
+                            ("type" "application/atom+xml")
+                            ("href" ,(link-to :view-comment-feed :absolute t)))))
+
+        (let ((number 0))
+          (dolist (journal-comment (select 'journal-comment
+                                           :order-by '(([date] :desc))
+                                           :flatp t))
+            (with-slots (entry uuid date body author website spam-p id)
+                        journal-comment
+               (unless spam-p
+                 (incf number)
+                 (with-tag ("entry")
+                   (emit-simple-tags :title (format nil "Kommentar zu: ~A" (title-of entry))
+                                     :id (format nil "urn:uuid:~(~A~)" uuid)
+                                     :updated (atom-time date)
+                                     :published (atom-time date))
+                   (with-tag ("link" `(("rel" "alternate")
+                                       ("type" "text/html")
+                                       ("href" ,(link-to :view
+                                                         :comment-id id
+                                                         :post-id (id-of entry)
+                                                         :absolute t)))))
+                   (when (<= number 8)
+                     ;; We only include the body for the most recent
+                     ;; posts in order to save bandwidth.
+                     (with-tag ("content" `(("type" "xhtml")
+                                            ("xml:lang" "de")
+                                            ("xml:base" ,(link-to :index :absolute t))))
+                       (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
+                         (xml-as-is (journal-markup->html (body-of journal-comment))))))))))))))
+  #.(restore-sql-reader-syntax-state))
 
 
 (defun show-atom-feed ()
@@ -113,7 +181,8 @@
                                           ("xml:lang" "de")
                                           ("xml:base" ,(link-to :index :absolute t))))
                      (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                       (xml-as-is (journal-markup->html (body-of journal-entry)))))))))))))
+                       (xml-as-is (with-yaclml-output-to-string
+                                    (render-comment-body (body-of journal-entry))))))))))))))
   #.(restore-sql-reader-syntax-state))
 
 
@@ -202,6 +271,7 @@
          (with-slots (author body date id email website)
              comment
            (<:div :class :journal-comment
+                  :id (format nil "comment-~D" id)
             (<:div :class :journal-comment-header
              (<:as-html (format nil "(~A) "
                                 (format-date nil "%day.%mon.%yr, %hr:%min" date)))

@@ -47,6 +47,7 @@
                                            :junk-allowed t  #|| :radix 12 ||#))
          (*action*          (or (keywordify (getf *query* :action))
                                 (cond ((string= "feed" (first *subpath*)) :view-atom-feed)
+                                      ((string= "comment-feed" (first *subpath*)) :view-comment-feed)
                                       ((string= "debug" (first *subpath*)) :view-debugging-page)
                                       ((string= "preview" (car (last *subpath*))) :preview-entry)
                                       ((string= "save" (car (last *subpath*))) :save-entry)
@@ -165,6 +166,7 @@
                            (mail-comment *notification-email* comment entry))))
                      (show-web-journal))
     (:view-atom-feed (show-atom-feed))
+    (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))
     (otherwise       (show-web-journal))))
 
