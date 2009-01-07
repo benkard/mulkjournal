@@ -88,8 +88,7 @@
           :db-info (:join-class journal-entry
                     :home-key entry-id
                     :foreign-key id
-                    :set nil
-                    :retrieval :immediate))
+                    :set nil))
    (uuid :type (string 36)
          :db-constraints :not-null
          :accessor uuid-of
