@@ -62,7 +62,7 @@
                         0)))
     (with-xml-output (*standard-output* :encoding "utf-8")
       (with-tag ("feed" '(("xmlns" "http://www.w3.org/2005/Atom")))
-        (emit-simple-tags :title "Kommentare &mdash; Kompottkins Weisheiten"
+        (emit-simple-tags :title "Kommentare &#151; Kompottkins Weisheiten"
                           :updated (atom-time
                                     (max (or (single-object
                                                (select [max [slot-value 'journal-entry 'date]]
@@ -182,7 +182,8 @@
                                           ("xml:base" ,(link-to :index :absolute t))))
                      (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
                        (xml-as-is (with-yaclml-output-to-string
-                                    (render-comment-body (body-of journal-entry))))))))))))))
+                                    (<:as-html
+                                     (render-comment-body (body-of journal-entry)))))))))))))))
   #.(restore-sql-reader-syntax-state))
 
 
