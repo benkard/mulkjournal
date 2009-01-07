@@ -357,6 +357,10 @@
             :type "application/atom+xml"
             :href (link-to :view-atom-feed)
             :title "Kompottkins weiser Atom-Feed")
+    (<:link :rel "replies"
+            :type "application/atom+xml"
+            :href (link-to :view-comment-feed)
+            :title "Kompottkins weiser Kommentarfeed")
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :css))
     (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
     (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name"))
