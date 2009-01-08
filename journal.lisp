@@ -63,7 +63,7 @@
     (with-xml-output (*standard-output* :encoding "utf-8")
       (with-tag ("feed" '(("xmlns" "http://www.w3.org/2005/Atom")))
         (with-tag ("title")
-          (xml-as-is "Kommentare &#151; Kompottkins Weisheiten"))
+          (xml-as-is "Kommentare &#8212; Kompottkins Weisheiten"))
         (emit-simple-tags :updated (atom-time
                                     (max (or (single-object
                                                (select [max [slot-value 'journal-entry 'date]]
