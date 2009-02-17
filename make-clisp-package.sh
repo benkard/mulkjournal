@@ -1,7 +1,7 @@
 #! /bin/sh
 cd ~
 for x in Downloads/Git/clsql\
-         Downloads/Darcs/{metatilities-base,dynamic-classes,cffi,metabang-bind,iterate,cl-markdown,cl-containers,defsystem-compatibility,alexandria,lw-compat,moptilities,metatilities,Bese/arnesi_dev,Bese/yaclml,asdf-system-connections,closer-mop,parenscript}\
+         Downloads/Darcs/{trivial-features,babel,metatilities-base,dynamic-classes,cffi,metabang-bind,iterate,cl-markdown,cl-containers,defsystem-compatibility,alexandria,lw-compat,moptilities,metatilities,Bese/arnesi_dev,Bese/yaclml,asdf-system-connections,closer-mop,parenscript}\
          Downloads/CVS/SLIME/slime\
          .clc/site/{anaphora-0.9.3,drakma-0.6.2,xml-emitter-1.0.2,lisp-cgi-utils-0.10,cl-utilities-1.2.4}\
          /usr/share/common-lisp/source/{cl-asdf,cl-chunga,cl-plus-ssl,cl-base64,cl-fad,cl-ppcre,cl-flexi-streams,puri,split-sequence,trivial-sockets,cl-trivial-gray-streams}; do
