@@ -193,7 +193,7 @@
   (dolist (env-var '("HTTP_CACHE_CONTROL" "HTTP_IF_MODIFIED_SINCE"))
     (pushnew env-var http::*http-env-vars*))
   (http:http-init)
-  #+mst-plus (setq cffi:*default-foreign-encoding* :iso-8859-15)
+  (setq cffi:*default-foreign-encoding* :iso-8859-15)
   (handler-bind
       ((error #'
         (lambda (e)
