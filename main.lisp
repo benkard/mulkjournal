@@ -127,6 +127,7 @@
 
 
 (defun dispatch-user-action ()
+  #.(locally-enable-sql-reader-syntax)
   (case *action*
     (:post-comment   (with-transaction ()
                        (let* ((entry (find-entry *post-number*))
@@ -189,7 +190,8 @@
     (:view-atom-feed (show-atom-feed))
     (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))
-    (otherwise       (show-web-journal))))
+    (otherwise       (show-web-journal)))
+  #.(restore-sql-reader-syntax-state))
 
 
 #+clisp
