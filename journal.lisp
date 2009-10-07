@@ -346,7 +346,7 @@
   ;;       termination, which makes generating a Last-Modified header
   ;;       feel slower to the end user rather than faster.
   ;;
-  ;; (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-add-header "Content-Language" "de")
   (http-add-header "Cache-Control" "public")
   (http-send-headers "text/html; charset=UTF-8")
