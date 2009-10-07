@@ -311,6 +311,7 @@ ELEMENT-TYPE as the stream's."
   (mail address
         (format nil "[Kommentar] ~A" (title-of entry))
         (format nil "~&Kommentar von: ~A~
+                     ~&Nummer: ~A~
                      ~&E-Mail: ~A~
                      ~&Website: ~A~
                      ~&IP-Adresse: ~A~
@@ -319,6 +320,7 @@ ELEMENT-TYPE as the stream's."
                      ~&~%~
                      ~&~A"
                 (author-of comment)
+                (id-of comment)
                 (email-of comment)
                 (website-of comment)
                 (submitter-ip comment)
