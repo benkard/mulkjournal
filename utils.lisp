@@ -326,7 +326,7 @@ ELEMENT-TYPE as the stream's."
                 (spamp comment)
                 (body-of comment))))
 
-(defun revalidate-cache-or-die ()
+(defun revalidate-cache-or-die (content-type)
   #+clisp
     (when *if-modified-since*
       (let* ((date-recognisers (mapcar #'cybertiggyr-time::make-fmt-recognizer '("%A, %d-%B-%y %H:%M:%S GMT" "%A, %d %B %Y %H:%M:%S GMT" "%A %B %d %H:%M:%S %Y")))
@@ -336,7 +336,7 @@ ELEMENT-TYPE as the stream's."
                    (integerp modified-time)
                    (>= requested-time modified-time))
           (http-add-header "Status" "304 Not Modified")
-          (http-send-headers)
+          (http-send-headers content-type)
           (ext:quit 0))))
   #-clisp
     nil)

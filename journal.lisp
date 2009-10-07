@@ -51,7 +51,7 @@
 
 (defun show-comment-feed ()
   #.(locally-enable-sql-reader-syntax)
-  (revalidate-cache-or-die)
+  (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
   (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-add-header "Content-Language" "de")
   (http-send-headers "application/atom+xml; charset=UTF-8")
@@ -123,7 +123,7 @@
 
 (defun show-atom-feed ()
   #.(locally-enable-sql-reader-syntax)
-  (revalidate-cache-or-die)
+  (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
   (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-add-header "Content-Language" "de")
   (http-send-headers "application/atom+xml; charset=UTF-8")
@@ -412,7 +412,7 @@
 
 (defun show-web-journal ()
   #.(locally-enable-sql-reader-syntax)
-  (revalidate-cache-or-die)
+  (revalidate-cache-or-die "text/html; charset=UTF-8")
   (with-web-journal ((if (member *action* '(:view :edit :preview :post-comment
                                             :save-entry))
                          (title-of (find-entry *post-number*))
