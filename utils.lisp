@@ -335,7 +335,7 @@ ELEMENT-TYPE as the stream's."
         (when (and (integerp requested-time)
                    (integerp modified-time)
                    (>= requested-time modified-time))
-          (http-add-header "Status: 304 Not Modified")
+          (http-add-header "Status" "304 Not Modified")
           (http-send-headers)
           (ext:quit 0))))
   #-clisp
