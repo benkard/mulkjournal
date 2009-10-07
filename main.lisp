@@ -183,7 +183,7 @@
                          (unless (spamp comment)
                            (update-records 'journal-comment
                                            :where [= [slot-value 'journal-comment 'id] (id-of comment)]
-                                           :av-pairs `((spam-p nil))))
+                                           :av-pairs `((spam_p nil))))
                          (when (eq *site* :nfs.net)
                            (mail-comment *notification-email* comment entry))))
                      (show-web-journal))
