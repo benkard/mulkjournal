@@ -90,6 +90,7 @@
 
         (let ((number 0))
           (dolist (journal-comment (select 'journal-comment
+                                           :where [= [slot-value 'journal-comment 'spam-p] "f"]
                                            :order-by '(([date] :desc))
                                            :flatp t))
             (with-slots (entry uuid date body author website spam-p id)

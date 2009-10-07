@@ -160,8 +160,8 @@
                  (select 'journal-comment
                          :where [and [= [slot-value 'journal-comment 'entry-id]
                                         (id-of journal-entry)]
-                                     [not [= [slot-value 'journal-comment 'spam-p]
-                                             "t"]]]
+                                     [= [slot-value 'journal-comment 'spam-p]
+                                        "f"]]
                          :order-by '([date])
                          :flatp t)
                  (select 'journal-comment
@@ -170,7 +170,7 @@
                          :order-by '([date])
                          :flatp t))
              (if ham-p
-                 (remove-if #'spamp (%comments-about journal-entry))
+                 (comments-about journal-entry :ordered-p t :ham-p t)
                  (%comments-about journal-entry)))
     #.(restore-sql-reader-syntax-state)))
 
