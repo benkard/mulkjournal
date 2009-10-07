@@ -61,9 +61,15 @@
                                  "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi")))
          (*script-dir*      (make-pathname
                              :directory (pathname-directory *script-filename*)))
+         (*site-root*		(ecase *site*
+                              (:mst-plus *script-dir*)
+                              (:nfs.net
+                               #+clisp (format nil "~A/" (ext:getenv "NFSN_SITE_ROOT"))
+                               #-clisp (error "Don't know where to look for stuff."))))
          (*data-dir*        (ecase *site*
                               (:mst-plus *script-dir*)
-                              (:nfs.net #p"/home/protected/journal/")))
+                              (:nfs.net (merge-pathnames #p"protected/journal/"
+                                                         *site-root*))))
          (*cache-dir*       (merge-pathnames #p"cache/" *data-dir*))
          (*wordpress-key*   (with-open-file (file (merge-pathnames
                                                    "wordpress-api-key.key"
