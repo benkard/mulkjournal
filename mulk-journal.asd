@@ -27,7 +27,8 @@
                 #:yaclml #:lisp-cgi-utils #:alexandria #:xml-emitter
                 #:split-sequence #:clsql #:clsql-uffi #:clsql-sqlite3
                 #:drakma #:cybertiggyr-time)
-  :components  ((:file "defpackage")
+  :components  ((:file "cybertiggyr-time/time.lisp")
+                (:file "defpackage")
                 (:file "macros")
                 (:file "globals")
                 (:file "utils")
