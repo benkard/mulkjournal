@@ -28,7 +28,7 @@
                 #:split-sequence #:clsql #:clsql-uffi #:clsql-sqlite3
                 #:drakma #:cybertiggyr-time)
   :components  ((:module "cybertiggyr-time"
-                         :components ((:file "cybertiggyr-time/time.lisp")))
+                         :components ((:file "time.lisp")))
                 (:file "defpackage")
                 (:file "macros")
                 (:file "globals")
