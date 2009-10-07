@@ -330,8 +330,11 @@ ELEMENT-TYPE as the stream's."
   #+clisp
     (when *if-modified-since*
       (let* ((date-recognisers (mapcar #'cybertiggyr-time::make-fmt-recognizer '("%A, %d-%B-%y %H:%M:%S GMT" "%A, %d %B %Y %H:%M:%S GMT" "%A %B %d %H:%M:%S %Y")))
-             (requested-time (cybertiggyr-time:parse-time *if-modified-since* date-recognisers)))
-        (when (and (integerp requested-time) (>= requested-time (compute-journal-last-modified-date)))
+             (requested-time (cybertiggyr-time:parse-time *if-modified-since* date-recognisers))
+             (modified-time (compute-journal-last-modified-date)))
+        (when (and (integerp requested-time)
+                   (integerp modified-time)
+                   (>= requested-time modified-time))
           (http-add-header "Status: 304 Not Modified")
           (http-send-headers)
           (ext:quit 0))))
