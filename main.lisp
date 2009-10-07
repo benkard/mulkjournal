@@ -54,6 +54,8 @@
                                       (*post-number*                      :view)
                                       (t                                  nil))))
          (*method*          (keywordify (gethash "REQUEST_METHOD" *http-env*)))
+         (*if-modified-since* #+clisp (ext:getenv "HTTP_IF_MODIFIED_SINCE")
+                              #-clisp nil)
          (*script-filename* (pathname-as-file
                              (or (gethash "SCRIPT_FILENAME" *http-env*)
                                  "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi")))

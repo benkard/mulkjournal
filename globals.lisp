@@ -76,3 +76,7 @@
   "Warnings that should be displayed to the user.")
 
 (defparameter *full-entry-view* t)
+
+(defparameter *site-root* nil)
+(defparameter *if-modified-since* nil)
+

@@ -346,6 +346,7 @@
   ;;
   ;; (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
   (http-add-header "Content-Language" "de")
+  (http-add-header "Cache-Control" "public")
   (http-send-headers "text/html; charset=UTF-8")
 
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
@@ -409,6 +410,7 @@
 
 (defun show-web-journal ()
   #.(locally-enable-sql-reader-syntax)
+  (revalidate-cache-or-die)
   (with-web-journal ((if (member *action* '(:view :edit :preview :post-comment
                                             :save-entry))
                          (title-of (find-entry *post-number*))
