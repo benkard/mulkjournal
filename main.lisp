@@ -181,7 +181,7 @@
                          (update-records-from-instance comment)
                          (update-records-from-instance entry)
                          (unless (spamp comment)
-                           (update-records 'journal-comment
+                           (update-records 'journal_comment
                                            :where [= [slot-value 'journal-comment 'id] (id-of comment)]
                                            :av-pairs `((spam_p nil))))
                          (when (eq *site* :nfs.net)
