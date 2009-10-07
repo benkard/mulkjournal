@@ -26,7 +26,7 @@
 (defparameter *site* nil
   "One of :WIRSELKRAUT and :NFS.NET.")
 
-(defparameter *notification-email* "mulk@gmx.net"
+(defparameter *notification-email* "auto@mail.matthias.benkard.de"
   "The e-mail address that comment submissions are to be sent to.")
 
 (defparameter *debugging-p* nil)
