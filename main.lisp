@@ -167,9 +167,22 @@
                                      <p>Hinweis: Diese Website verwendet ~
                                      <a href=\"http://akismet.com/\">Akismet</a> ~
                                      f&uuml;r die Spamerkennung.</p>")
-                                     *journal-warnings*)))
+                                     *journal-warnings*))
+                           (unless spam-p
+                             (push (format nil
+                                    "<p>Unmoderierte Kommentierung wurde ~
+                                     aufgrund des hohen Spamaufkommens ~
+                                     in diesem Blog deaktiviert.  Ihr Kommentar ~
+                                     wurde daher an den Betreiber des Blogs ~
+                                     geschickt, welcher ihn freischalten wird, ~
+                                     sobald er dazu kommt.</p>")
+                                   *journal-warnings*)))
                          (update-records-from-instance comment)
                          (update-records-from-instance entry)
+                         (unless (spamp comment)
+                           (update-records 'journal-comment
+                                           :where [= [slot-value 'journal-comment 'id] (id-of comment)]
+                                           :avpairs `((spam-p nil))))
                          (when (eq *site* :nfs.net)
                            (mail-comment *notification-email* comment entry))))
                      (show-web-journal))
