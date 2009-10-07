@@ -328,10 +328,11 @@ ELEMENT-TYPE as the stream's."
 
 (defun revalidate-cache-or-die ()
   #+clisp
-    (let ((time (cybertiggyr-time:parse-time *if-modified-since*)))
-      (when (and (integerp time) (>= *if-modified-since* (compute-journal-last-modified-date)))
-        (http-add-header "Status: 304 Not Modified")
-        (http-send-headers)
-        (ext:quit 0)))
+    (when *if-modified-since*
+      (let ((time (cybertiggyr-time:parse-time *if-modified-since*)))
+        (when (and (integerp time) (>= *if-modified-since* (compute-journal-last-modified-date)))
+          (http-add-header "Status: 304 Not Modified")
+          (http-send-headers)
+          (ext:quit 0))))
   #-clisp
     nil)
