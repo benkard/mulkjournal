@@ -145,6 +145,43 @@
                                      :where [= [id] id]
                                      :av-pairs `((spam_p "t")))))
                  (show-moderation-page)))
+    (:view-atom-entry
+     (cond ((string= *method* "GET") (show-atom-entry))
+           ((member *method* '("POST" "PUT") :test 'equal)
+            (with-transaction ()
+              (let* ((entry (if (string= *method* "PUT")
+                                (find-entry *post-number*)
+                                (make-instance 'journal-entry
+                                   :id (make-journal-entry-id)
+                                   :uuid (make-uuid)
+                                   :date (get-universal-time)
+                                   :last-modification nil
+                                   :categories ()
+                                   :comments ()))))
+                (when (string= *method* "PUT")
+                  (setf (last-modification-of entry)
+                        (get-universal-time)))
+                (let* ((post-data (with-output-to-string (out)
+                                    (loop for line = (read-line *standard-input* nil nil nil)
+                                          while line
+                                            do (write-line line out))))
+                       (xml (xmls:parse post-data))
+                       (entry-elements (cddr xml))
+                       (content-element (find "content" entry-elements :key 'car :test 'equal))
+                       (content (caddr content-element))
+                       (title-element (find "title" entry-elements :key 'cat :test 'equal))
+                       (content-type (cadr (assoc "type" (cadr content-element))))
+                       (content-mode (cadr (assoc "type" (cadr content-element)))))
+                  (when content-element
+                    (setf (body-of entry) (etypecase content
+                                            (null "")
+                                            (cons (xmls:toxml content :indent t))
+                                            (string content))))
+                  (when title-element
+                    (setf (title-of entry) (or (caddr title-element) "")))
+                  (setf (entry-type-of entry) "html"))
+                (update-records-from-instance entry)))
+            (show-atom-entry))))
     (otherwise (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
 
@@ -245,7 +282,6 @@
     (:view-atom-feed (show-atom-feed))
     (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))
-    (:view-atom-entry (show-atom-entry))
     (otherwise       (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
 
