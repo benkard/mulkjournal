@@ -163,6 +163,14 @@
                                                  :absolute t))
                                ("title" ,title)))))
          (when full-content
+           ;; Escaped HTML or embedded XHTML?  What shall we prefer?
+           #+(or)
+           (with-tag ("content" `(("type" "html")
+                                  ("xml:lang" "de")
+                                  ("xml:base" ,(link-to :index :absolute t))))
+             (xml-out (if (equal (entry-type-of journal-entry) "html")
+                          (body-of journal-entry)
+                          (journal-markup->html (body-of journal-entry)))))
            (with-tag ("content" `(("type" "xhtml")
                                   ("xml:lang" "de")
                                   ("xml:base" ,(link-to :index :absolute t))))
