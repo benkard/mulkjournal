@@ -29,6 +29,7 @@
                 #:drakma #:cybertiggyr-time)
   :components  ((:module "cybertiggyr-time"
                          :components ((:file "time")))
+                (:module "xmls" :components ((:file "xmls")))
                 (:file "defpackage")
                 (:file "macros")
                 (:file "globals")
