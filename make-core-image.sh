@@ -2,7 +2,7 @@
 clisp -q -q -on-error exit <<EOF
 (dolist (system '(:cl-ppcre :cl-fad :iterate :cl-markdown :parenscript
                   :yaclml :lisp-cgi-utils :alexandria :xml-emitter
-                  :split-sequence :clsql :clsql-sqlite3 :drakma))
+                  :split-sequence :clsql :clsql-sqlite3 :drakma :cybertyggr-time))
   (asdf:oos 'asdf:load-op system))
 (saveinitmem "lispinit.mem")
 (quit)
