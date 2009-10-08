@@ -288,6 +288,17 @@
              (<:as-html (render-comment-body body))))))))
 
     (when comments-p
+      (<:as-is (format nil "<!--
+    <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"
+             xmlns:dc=\"http://purl.org/dc/elements/1.1/\"
+             xmlns:trackback=\"http://madskills.com/public/xml/rss/module/trackback/\">
+    <rdf:Description
+        rdf:about=\"~A\"
+        dc:identifier=\"~:*~A\"
+        dc:title=\"~A\"
+        trackback:ping=\"~A\" />
+    </rdf:RDF>
+-->" (link-to :view :post-id id) title (link-to :trackback :post-id id)))
       (<:div :class :journal-new-comment
        (<:h2 "Neuen Kommentar schreiben")
        (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
