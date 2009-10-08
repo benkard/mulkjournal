@@ -146,7 +146,10 @@
                                      :av-pairs `((spam_p "t")))))
                  (show-moderation-page)))
     (:view-atom-entry
-     (cond ((string= *method* "GET") (show-atom-entry))
+     (cond ((string= *method* "GET")
+            (if *post-number*
+                (show-atom-entry)
+                (show-atom-feed :include-edit-links t)))
            ((member *method* '("POST" "PUT") :test 'equal)
             (with-transaction ()
               (let* ((entry (if (string= *method* "PUT")

@@ -46,7 +46,7 @@
         ((:edit :preview) (values "/~D/preview" post-id))
         (:post-comment (values "/~D" post-id))
         (:trackback (values "/~D/trackback" post-id))
-        (:atom (values "/~D/atom" post-id))
+        (:view-atom-entry (values "/~D/atom" post-id))
         (:save (values "/~D/save" post-id))
         (:moderation-page "/moderate")
         (:css "/../journal.css")))))
@@ -133,7 +133,7 @@
   (http-send-headers "application/atom+xml; charset=UTF-8")
 
   (with-xml-output (*standard-output* :encoding "utf-8")
-    (show-atom-entry-xml (find-entry *post-number*) :full-content t)))
+    (show-atom-entry-xml (find-entry *post-number*) :full-content t :include-edit-links t)))
 
 
 (defun show-atom-entry-xml (journal-entry &key full-content include-edit-links)
@@ -171,7 +171,7 @@
   #.(restore-sql-reader-syntax-state))
 
 
-(defun show-atom-feed ()
+(defun show-atom-feed (&key include-edit-links)
   #.(locally-enable-sql-reader-syntax)
   (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
   (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
@@ -208,6 +208,10 @@
         (with-tag ("link" `(("rel" "self")
                             ("type" "application/atom+xml")
                             ("href" ,(link-to :view-atom-feed :absolute t)))))
+        (when include-edit-links
+          (with-tag ("link" `(("rel" "service.post")
+                              ("type" "application/atom+xml")
+                              ("href" ,(link-to :view-atom-entry :absolute t))))))
 
         (let ((number 0))
           (dolist (journal-entry (select 'journal-entry
@@ -220,7 +224,8 @@
                                                         (> (last-modification-of journal-entry)
                                                            (- (get-universal-time)
                                                               (* 30 24 60 60))))
-                                                   (<= number 8)))
+                                                   (<= number 8))
+                                 :include-edit-links include-edit-links)
             (incf number))))))
   #.(restore-sql-reader-syntax-state))
 
@@ -410,6 +415,10 @@
             :type "application/atom+xml"
             :href (link-to :view-comment-feed)
             :title "Kompottkins weiser Kommentarfeed")
+    (<:link :rel "service.feed"
+            :type "application/atom+xml"
+            :href (link-to :view-atom-entry)
+            :title "Kompottkins Weisheiten")
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :css))
     (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
     (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name"))
