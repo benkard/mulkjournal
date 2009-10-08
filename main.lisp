@@ -196,7 +196,7 @@
                                   :uuid      (make-uuid)
                                   :entry-id  (id-of entry)
                                   :date      (get-universal-time)
-                                  :blog-name (getf *query* :blog-name)
+                                  :blog-name (getf *query* :blog_name)
                                   :title     (getf *query* :title)
                                   :excerpt   (getf *query* :excerpt)
                                   :url       (getf *query* :url)
