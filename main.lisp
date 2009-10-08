@@ -149,7 +149,7 @@
      (cond ((string= *method* "GET")
             (if *post-number*
                 (show-atom-entry)
-                (show-atom-feed :include-edit-links t)))
+                (show-atom-feed :include-edit-links t :full-content t)))
            ((member *method* '("POST" "PUT") :test 'equal)
             (with-transaction ()
               (let* ((entry (if (string= *method* "PUT")

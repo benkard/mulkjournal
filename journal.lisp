@@ -171,7 +171,7 @@
   #.(restore-sql-reader-syntax-state))
 
 
-(defun show-atom-feed (&key include-edit-links)
+(defun show-atom-feed (&key include-edit-links full-content)
   #.(locally-enable-sql-reader-syntax)
   (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
   (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
@@ -211,7 +211,13 @@
         (when include-edit-links
           (with-tag ("link" `(("rel" "service.post")
                               ("type" "application/atom+xml")
-                              ("href" ,(link-to :view-atom-entry :absolute t))))))
+                              ("href" ,(link-to :view-atom-entry :absolute t)))))
+          (with-tag ("link" `(("rel" "service.feed")
+                              ("type" "application/atom+xml")
+                              ("href" ,(link-to :view-atom-entry :absolute t)))))
+          #+(or) (with-tag ("link" `(("rel" "service.categories")
+                                     ("type" "application/atom+xml")
+                                     ("href" ,(link-to :view-atom-entry :absolute t))))))
 
         (let ((number 0))
           (dolist (journal-entry (select 'journal-entry
@@ -224,7 +230,8 @@
                                                         (> (last-modification-of journal-entry)
                                                            (- (get-universal-time)
                                                               (* 30 24 60 60))))
-                                                   (<= number 8))
+                                                   (<= number 8)
+                                                   full-content)
                                  :include-edit-links include-edit-links)
             (incf number))))))
   #.(restore-sql-reader-syntax-state))
