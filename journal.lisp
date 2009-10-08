@@ -167,7 +167,9 @@
                                   ("xml:lang" "de")
                                   ("xml:base" ,(link-to :index :absolute t))))
              (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-               (xml-as-is (journal-markup->html (body-of journal-entry)))))))))
+               (xml-as-is (if (equal (entry-type-of journal-entry) "html")
+                              (body-of journal-entry)
+                              (journal-markup->html (body-of journal-entry))))))))))
   #.(restore-sql-reader-syntax-state))
 
 
@@ -250,8 +252,8 @@
 
 
 (defun show-journal-entry (journal-entry &key (comments-p nil))
-  (with-slots (id title body categories date) journal-entry
-     (show-journal-entry-with-components id title body categories date
+  (with-slots (id title body categories date type) journal-entry
+     (show-journal-entry-with-components id title body categories date type
                                          (comments-about journal-entry
                                                          :ordered-p t
                                                          :ham-p t)
@@ -261,8 +263,8 @@
                                                            :ham-p t))))
 
 
-(defun show-journal-entry-with-components (id title body categories
-                                           posting-date comments comments-p trackbacks)
+(defun show-journal-entry-with-components (id title body categories posting-date
+                                           type comments comments-p trackbacks)
   (unless *full-entry-view*
     (<:tr
      (<:td (<:a :href (link-to :view :post-id id)
@@ -287,7 +289,9 @@
          (<:as-html
           (format nil "Abgeheftet unter ...")))))
       (<:div :class :journal-entry-body
-       (<:as-is (journal-markup->html body)))
+       (<:as-is (if (equal type "html")
+                    body
+                    (journal-markup->html body))))
       (<:div :class :journal-entry-footer
        (<:form :class :journal-entry-delete-button-form
                :style "display: inline;"
@@ -621,6 +625,7 @@
                                         body
                                         nil
                                         (get-universal-time)
+                                        "markdown"
                                         nil
                                         nil
                                         nil)
