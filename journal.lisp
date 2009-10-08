@@ -211,11 +211,14 @@
                                          (comments-about journal-entry
                                                          :ordered-p t
                                                          :ham-p t)
-                                         comments-p)))
+                                         comments-p
+                                         (trackbacks-about journal-entry
+                                                           :ordered-p t
+                                                           :ham-p t))))
 
 
 (defun show-journal-entry-with-components (id title body categories
-                                           posting-date comments comments-p)
+                                           posting-date comments comments-p trackbacks)
   (unless *full-entry-view*
     (<:tr
      (<:td (<:a :href (link-to :view :post-id id)
@@ -287,6 +290,27 @@
              (<:as-html " meint: "))
             (<:div :class :journal-comment-body
              (<:as-html (render-comment-body body))))))))
+
+    (when (and comments-p (not (null trackbacks)))
+      (<:div :class :journal-comments
+       (<:h2 "Trackbacks")
+       (dolist (trackback trackbacks)
+         (with-slots (title excerpt date id url blog-name)
+             trackback
+           (<:div :class :journal-comment
+                  :id (format nil "trackback-~D" id)
+            (<:div :class :journal-comment-header
+                   (<:as-html (format nil "(~A) "
+                                      (format-date nil "%day.%mon.%yr, %hr:%min" date)))
+                   (<:strong (<:as-html (format nil "~A " (or blog-name url))))
+                   (if (null title)
+                       (<:a :href url :rel "nofollow" (<:as-html "schreibt hierzu:"))
+                       (progn
+                         (<:as-html "schreibt hierzu im Artikel ")
+                         (<:a :href url :rel "nofollow" (<:as-html (format nil "~A" title)))
+                         (<:as-html ":"))))
+            (<:div :class :journal-comment-body
+             (<:as-html (render-comment-body excerpt))))))))
 
     (when comments-p
       (<:as-is (format nil "<!--
@@ -491,6 +515,7 @@
                                         body
                                         nil
                                         (get-universal-time)
+                                        nil
                                         nil
                                         nil)
     ;; Editor here.
