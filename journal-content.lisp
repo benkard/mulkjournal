@@ -176,7 +176,7 @@
               :initform nil)
    (url :type string
         :accessor url-of
-        :initarg :website
+        :initarg :url
         :initform nil)
    (spam-p :type boolean
            :accessor spamp
