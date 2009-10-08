@@ -46,6 +46,7 @@
         ((:edit :preview) (values "/~D/preview" post-id))
         (:post-comment (values "/~D" post-id))
         (:trackback (values "/~D/trackback" post-id))
+        (:atom (values "/~D/atom" post-id))
         (:save (values "/~D/save" post-id))
         (:moderation-page "/moderate")
         (:css "/../journal.css")))))
@@ -124,6 +125,53 @@
   #.(restore-sql-reader-syntax-state))
 
 
+(defun show-atom-entry ()
+  #.(locally-enable-sql-reader-syntax)
+  (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
+  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+  (http-add-header "Content-Language" "de")
+  (http-send-headers "application/atom+xml; charset=UTF-8")
+
+  (with-xml-output (*standard-output* :encoding "utf-8")
+    (show-atom-entry-xml journal-entry :full-content t)))
+
+
+(defun show-atom-entry-xml (journal-entry &key full-content include-edit-links)
+  (flet ((atom-time (time)
+           (format-date nil
+                        "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2secZ%"
+                        time
+                        0)))
+    (with-xml-output (*standard-output* :encoding "utf-8")
+      (with-slots (title date body categories last-modification id)
+                  journal-entry
+         (with-tag ("entry")
+           (emit-simple-tags :title title
+                             :id (format nil "urn:uuid:~(~A~)"
+                                         (uuid-of journal-entry))
+                             :updated (atom-time (or last-modification date))
+                             :published (atom-time date))
+           (with-tag ("link" `(("rel" "alternate")
+                               ("type" "text/html")
+                               ("href" ,(link-to :view
+                                                 :post-id id
+                                                 :absolute t)))))
+           (when include-edit-links
+             (with-tag ("link" `(("rel" "service.edit")
+                                 ("type" "application/atom+xml")
+                                 ("href" ,(link-to :view-atom-entry
+                                                   :post-id id
+                                                   :absolute t))
+                                 ("title" ,title)))))
+           (when full-content
+             (with-tag ("content" `(("type" "xhtml")
+                                    ("xml:lang" "de")
+                                    ("xml:base" ,(link-to :index :absolute t))))
+               (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
+                 (xml-as-is (journal-markup->html (body-of journal-entry))))))))))
+  #.(restore-sql-reader-syntax-state))
+
+
 (defun show-atom-feed ()
   #.(locally-enable-sql-reader-syntax)
   (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
@@ -166,31 +214,15 @@
           (dolist (journal-entry (select 'journal-entry
                                          :order-by '(([date] :desc))
                                          :flatp t))
-            (incf number)
-            (with-slots (title date body categories last-modification id)
-                        journal-entry
-               (with-tag ("entry")
-                 (emit-simple-tags :title title
-                                   :id (format nil "urn:uuid:~(~A~)"
-                                               (uuid-of journal-entry))
-                                   :updated (atom-time (or last-modification date))
-                                   :published (atom-time date))
-                 (with-tag ("link" `(("rel" "alternate")
-                                     ("type" "text/html")
-                                     ("href" ,(link-to :view
-                                                       :post-id id
-                                                       :absolute t)))))
-                 (when (or (and last-modification
-                                (> last-modification (- (get-universal-time)
-                                                        (* 30 24 60 60))))
-                           (<= number 8))
-                   ;; We only include the body for the most recent
-                   ;; posts in order to save bandwidth.
-                   (with-tag ("content" `(("type" "xhtml")
-                                          ("xml:lang" "de")
-                                          ("xml:base" ,(link-to :index :absolute t))))
-                     (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                       (xml-as-is (journal-markup->html (body-of journal-entry)))))))))))))
+            ;; We only include the body for the most recent posts in
+            ;; order to save bandwidth.
+            (show-atom-entry-xml journal-entry
+                                 :full-content (or (and (last-modification-of journal-entry)
+                                                        (> (last-modification-of journal-entry)
+                                                           (- (get-universal-time)
+                                                              (* 30 24 60 60))))
+                                                   (<= number 8)))
+            (incf number))))))
   #.(restore-sql-reader-syntax-state))
 
 

@@ -53,6 +53,7 @@
                                       ((string= "trackback" (car (last *subpath*))) :post-trackback)
                                       ((string= "save" (car (last *subpath*))) :save-entry)
                                       ((string= "moderate" (car (last *subpath*))) :moderate)
+                                      ((string= "atom" (car (last *subpath*))) :view-atom-entry)
                                       (*post-number*                      :view)
                                       (t                                  nil))))
          (*method*          (keywordify (gethash "REQUEST_METHOD" *http-env*)))
@@ -242,6 +243,7 @@
     (:view-atom-feed (show-atom-feed))
     (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))
+    (:view-atom-entry (show-atom-entry))
     (otherwise       (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
 
