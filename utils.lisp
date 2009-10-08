@@ -144,7 +144,7 @@ after another in any arbitrary order."
                    (format out control value)
                    (format out "%~A%" substring))
                (setq last-match-end end))))
-         (format destination (subseq date-control-string last-match-end)))))))
+         (format out (subseq date-control-string last-match-end)))))))
 
 
 (defun compute-script-last-modified-date ()
