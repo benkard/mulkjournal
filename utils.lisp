@@ -381,3 +381,35 @@ ELEMENT-TYPE as the stream's."
           (ext:quit 0))))
   #-clisp
     nil)
+
+
+(defun call-with-wsse-authentication (thunk)
+  (let ((params (list)))
+    (ppcre:do-scans (start end regstarts regends "(\\w+)=\"(.*?)\"" *wsse*)
+      (setf params (acons (subseq *wsse* (elt regstarts 0) (elt regends 0))
+                          (subseq *wsse* (elt regstarts 1) (elt regends 1))
+                          params)))
+    (let* ((timestamp (cdr (assoc "created" params :test 'equalp)))
+           (time (cybertiggyr-time:parse-time timestamp))
+           (nonce (cdr (assoc "nonce" params :test 'equalp)))
+           (user (cdr (assoc "username" params :test 'equalp)))
+           (their-digest (cdr (assoc "passworddigest" params :test 'equalp)))
+           (our-digest (cl-base64:string-to-base64-string
+                        (ironclad:digest-sequence
+                         'ironclad:sha1
+                         (format nil "~A~A~A" nonce timestamp *wsse-key*)))))
+      (declare (ignore user))
+      (if (and (string= their-digest our-digest)
+               (<= (abs (- (get-universal-time) time)) (* 5 60)))
+          (funcall thunk)
+          (progn
+            (http-add-header "Status" "401 Unauthorized")
+            (http-add-header "WWW-Authenticate" "WSSE realm=\"Mulk Journal\", profile=\"UsernameToken\"")
+            (http-add-header "X-Authentication-Message"
+                             (if (string= their-digest our-digest)
+                                 "Time stamp too old."
+                                 "Wrong user name or password.")))))))
+
+
+(defmacro with-wsse-authentication (() &body body)
+  `(call-with-wsse-authentication (lambda () ,@body)))

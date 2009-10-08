@@ -79,4 +79,5 @@
 
 (defparameter *site-root* nil)
 (defparameter *if-modified-since* nil)
-
+(defparameter *wsse* nil)
+(defparameter *wsse-key* nil)
