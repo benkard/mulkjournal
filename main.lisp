@@ -268,6 +268,7 @@
                   (when (string= *method* "PUT")
                     (setf (last-modification-of entry)
                           (get-universal-time)))
+                  (setf *post-number* (id-of entry))
                   (flet ((tag-equal (tag1 tag2)
                            (equal (if (consp tag1) (car tag1) tag1)
                                   (if (consp tag2) (car tag2) tag2))))
@@ -291,8 +292,7 @@
                       (when title-element
                         (setf (title-of entry) (or (caddr title-element) "")))
                       (setf (entry-type-of entry) "html")))
-                  (update-records-from-instance entry)
-                  (setq *post-number* (id-of entry))))
+                  (update-records-from-instance entry)))
               (show-atom-entry))
              (t (debug-log "Oops. Method was:") (debug-log *method*)))))
     (:view-atom-feed (show-atom-feed))
