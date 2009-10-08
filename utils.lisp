@@ -399,10 +399,10 @@ ELEMENT-TYPE as the stream's."
            (our-digest (and (stringp nonce)
                             (stringp timestamp)
                             (stringp *wsse-key*)
-                            (cl-base64:string-to-base64-string
+                            (cl-base64:usb8-array-to-base64-string
                              (ironclad:digest-sequence
                               :sha1
-                              (format nil "~A~A~A" nonce timestamp *wsse-key*))))))
+                              (map 'vector #'char-code (format nil "~A~A~A" nonce timestamp *wsse-key*)))))))
       (declare (ignore user))
       (if (and (stringp our-digest)
                (stringp their-digest)
