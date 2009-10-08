@@ -396,7 +396,7 @@ ELEMENT-TYPE as the stream's."
            (their-digest (cdr (assoc "passworddigest" params :test 'equalp)))
            (our-digest (cl-base64:string-to-base64-string
                         (ironclad:digest-sequence
-                         'ironclad:sha1
+                         :sha1
                          (format nil "~A~A~A" nonce timestamp *wsse-key*)))))
       (declare (ignore user))
       (if (and (string= their-digest our-digest)
