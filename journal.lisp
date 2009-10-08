@@ -133,7 +133,7 @@
   (http-send-headers "application/atom+xml; charset=UTF-8")
 
   (with-xml-output (*standard-output* :encoding "utf-8")
-    (show-atom-entry-xml journal-entry :full-content t)))
+    (show-atom-entry-xml (find-entry *post-number*) :full-content t)))
 
 
 (defun show-atom-entry-xml (journal-entry &key full-content include-edit-links)
