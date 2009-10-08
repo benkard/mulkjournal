@@ -328,6 +328,27 @@ ELEMENT-TYPE as the stream's."
                 (spamp comment)
                 (body-of comment))))
 
+(defun mail-trackback (address comment entry)
+  (mail address
+        (format nil "[Trackback] ~A" (title-of entry))
+        (format nil "~&Trackback von: ~A~
+                     ~&Nummer: ~A~
+                     ~&Titel: ~A~
+                     ~&Web-Adresse: ~A~
+                     ~&IP-Adresse: ~A~
+                     ~&Webbrowser: ~A~
+                     ~&Als Spam erkannt: ~A~
+                     ~&~%~
+                     ~&~A"
+                (blog-name-of comment)
+                (id-of comment)
+                (title-of comment)
+                (url-of comment)
+                (submitter-ip comment)
+                (submitter-user-agent comment)
+                (spamp comment)
+                (excerpt-of comment))))
+
 (defun revalidate-cache-or-die (content-type)
   #+clisp
     (when *if-modified-since*

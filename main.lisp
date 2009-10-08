@@ -50,6 +50,7 @@
                                       ((string= "comment-feed" (first *subpath*)) :view-comment-feed)
                                       ((string= "debug" (first *subpath*)) :view-debugging-page)
                                       ((string= "preview" (car (last *subpath*))) :preview-entry)
+                                      ((string= "trackback" (car (last *subpath*))) :post-trackback)
                                       ((string= "save" (car (last *subpath*))) :save-entry)
                                       (*post-number*                      :view)
                                       (t                                  nil))))
@@ -187,6 +188,38 @@
                          (when (eq *site* :nfs.net)
                            (mail-comment *notification-email* comment entry))))
                      (show-web-journal))
+    (:post-trackback (with-transaction ()
+                       (let* ((entry (find-entry *post-number*))
+                              (trackback
+                               (make-instance 'journal-trackback
+                                  :id        (make-journal-trackback-id)
+                                  :uuid      (make-uuid)
+                                  :entry-id  (id-of entry)
+                                  :date      (get-universal-time)
+                                  :blog-name (getf *query* :blog-name)
+                                  :title     (getf *query* :title)
+                                  :excerpt   (getf *query* :excerpt)
+                                  :url       (getf *query* :url)
+                                  :submitter-ip (gethash "REMOTE_ADDR" *http-env*)
+                                  :submitter-user-agent (gethash "HTTP_USER_AGENT" *http-env*))))
+                         (http-send-headers "application/atom+xml; charset=UTF-8")
+                         (cond
+                           ((getf *query* :url)
+                            (push trackback (trackbacks-about entry))
+                            (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>0</error>~&</response>"))
+                           (t
+                            (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>1</error>~&<message>No URI was provided.</message>~&</response>")))
+                         (with-slots (spam-p) trackback
+                           (setq spam-p (detect-spam trackback
+                                                     :referrer (gethash "HTTP_REFERER" *http-env*))))
+                         (update-records-from-instance trackback)
+                         (update-records-from-instance entry)
+                         (unless (spamp trackback)
+                           (update-records 'journal_trackback
+                                           :where [= [slot-value 'journal-trackback 'id] (id-of trackback)]
+                                           :av-pairs `((spam_p nil))))
+                         (when (eq *site* :nfs.net)
+                           (mail-trackback *notification-email* trackback entry)))))
     (:view-atom-feed (show-atom-feed))
     (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))

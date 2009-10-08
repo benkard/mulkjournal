@@ -68,7 +68,15 @@
              :db-info (:join-class journal-comment
                        :home-key id
                        :foreign-key entry-id
-                       :set t))))
+                       :set t))
+   (trackbacks :db-kind :join
+               :db-constraints :not-null
+               :accessor %trackbacks-about
+               :initarg :trackbacks
+               :db-info (:join-class journal-trackback
+                         :home-key id
+                         :foreign-key entry-id
+                         :set t))))
 
 
 (clsql:def-view-class journal-comment ()
@@ -127,6 +135,61 @@
                          :accessor submitter-user-agent
                          :initarg :submitter-user-agent)))
 
+(clsql:def-view-class journal-trackback ()
+  ((id :db-kind :key
+       :type integer
+       :db-constraints :not-null
+       :accessor id-of
+       :initarg :id)
+   (entry-id :type integer
+             :db-constraints :not-null
+             :accessor entry-id-of
+             :initarg :entry-id)
+   (entry :db-kind :join
+          :db-constraints :not-null
+          :accessor entry-of
+          :initarg :entries
+          :db-info (:join-class journal-entry
+                    :home-key entry-id
+                    :foreign-key id
+                    :set nil))
+   (uuid :type (string 36)
+         :db-constraints :not-null
+         :accessor uuid-of
+         :initarg :uuid)
+   (date :type universal-time
+         :db-constraints :not-null
+         :accessor date-of
+         :initarg :date)
+   (excerpt :type string
+            :db-constraints :not-null
+            :accessor excerpt-of
+            :initarg :excerpt
+            :initform "")
+   (title :type string
+          :accessor title-of
+          :initarg :title
+          :initform nil)
+   (blog-name :type string
+              :accessor blog-name-of
+              :initarg :blog-name
+              :initform nil)
+   (url :type string
+        :accessor url-of
+        :initarg :website
+        :initform nil)
+   (spam-p :type boolean
+           :accessor spamp
+           :initarg :spamp
+           :initform :spamp)
+   (submitter-ip :type string
+                 :db-constraints :not-null
+                 :accessor submitter-ip
+                 :initarg :submitter-ip)
+   (submitter-user-agent :type string
+                         :db-constraints :not-null
+                         :accessor submitter-user-agent
+                         :initarg :submitter-user-agent)))
 
 (clsql:def-view-class journal-category ()
   ((id :db-kind :key
@@ -152,6 +215,8 @@
 ;; (@* "Journal entry operations")
 (defgeneric comments-about (thing &key ordered-p))
 (defgeneric (setf comments-about) (new-value thing &key ordered-p))
+(defgeneric trackbacks-about (thing &key ordered-p))
+(defgeneric (setf trackbacks-about) (new-value thing &key ordered-p))
 
 (defmethod comments-about ((journal-entry journal-entry) &key ordered-p ham-p)
   #.(locally-enable-sql-reader-syntax)
@@ -182,6 +247,13 @@
   (setf (%comments-about journal-entry) new-value))
 
 
+(defmethod (setf trackbacks-about) (new-value
+                                    (journal-entry journal-entry)
+                                    &key ordered-p)
+  (declare (ignore ordered-p))
+  (setf (%trackbacks-about journal-entry) new-value))
+
+
 (defun make-journal-entry-id ()
   #.(locally-enable-sql-reader-syntax)
   (prog1
@@ -197,6 +269,16 @@
   (prog1
       (1+ (or (single-object (select [max [slot-value 'journal-comment 'id]]
                                      :from [journal-comment]
+                                     :flatp t))
+              -1))
+    #.(restore-sql-reader-syntax-state)))
+
+
+(defun make-journal-trackback-id ()
+  #.(locally-enable-sql-reader-syntax)
+  (prog1
+      (1+ (or (single-object (select [max [slot-value 'journal-trackback 'id]]
+                                     :from [journal-trackback]
                                      :flatp t))
               -1))
     #.(restore-sql-reader-syntax-state)))
