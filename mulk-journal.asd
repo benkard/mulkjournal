@@ -30,6 +30,7 @@
   :components  ((:module "cybertiggyr-time"
                          :components ((:file "time")))
                 (:module "xmls" :components ((:file "xmls")))
+                (:module "ironclad" :components ((:file "package") (:file "common") (:file "digest") (:file "sha1")) :serial t)
                 (:file "defpackage")
                 (:file "macros")
                 (:file "globals")
