@@ -35,7 +35,7 @@
                              "/journal")))
     (multiple-value-call
         #'(lambda (&rest args) (apply #'format out args))
-      (case action
+      (ecase action
         (:index "")
         (:full-index "/?full")
         (:view-atom-feed (values "/feed"))
