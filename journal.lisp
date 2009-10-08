@@ -142,33 +142,32 @@
                         "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2secZ%"
                         time
                         0)))
-    (with-xml-output (*standard-output* :encoding "utf-8")
-      (with-slots (title date body categories last-modification id)
-                  journal-entry
-         (with-tag ("entry")
-           (emit-simple-tags :title title
-                             :id (format nil "urn:uuid:~(~A~)"
-                                         (uuid-of journal-entry))
-                             :updated (atom-time (or last-modification date))
-                             :published (atom-time date))
-           (with-tag ("link" `(("rel" "alternate")
-                               ("type" "text/html")
-                               ("href" ,(link-to :view
+    (with-slots (title date body categories last-modification id)
+                journal-entry
+       (with-tag ("entry")
+         (emit-simple-tags :title title
+                           :id (format nil "urn:uuid:~(~A~)"
+                                       (uuid-of journal-entry))
+                           :updated (atom-time (or last-modification date))
+                           :published (atom-time date))
+         (with-tag ("link" `(("rel" "alternate")
+                             ("type" "text/html")
+                             ("href" ,(link-to :view
+                                               :post-id id
+                                               :absolute t)))))
+         (when include-edit-links
+           (with-tag ("link" `(("rel" "service.edit")
+                               ("type" "application/atom+xml")
+                               ("href" ,(link-to :view-atom-entry
                                                  :post-id id
-                                                 :absolute t)))))
-           (when include-edit-links
-             (with-tag ("link" `(("rel" "service.edit")
-                                 ("type" "application/atom+xml")
-                                 ("href" ,(link-to :view-atom-entry
-                                                   :post-id id
-                                                   :absolute t))
-                                 ("title" ,title)))))
-           (when full-content
-             (with-tag ("content" `(("type" "xhtml")
-                                    ("xml:lang" "de")
-                                    ("xml:base" ,(link-to :index :absolute t))))
-               (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-                 (xml-as-is (journal-markup->html (body-of journal-entry))))))))))
+                                                 :absolute t))
+                               ("title" ,title)))))
+         (when full-content
+           (with-tag ("content" `(("type" "xhtml")
+                                  ("xml:lang" "de")
+                                  ("xml:base" ,(link-to :index :absolute t))))
+             (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
+               (xml-as-is (journal-markup->html (body-of journal-entry)))))))))
   #.(restore-sql-reader-syntax-state))
 
 
