@@ -360,5 +360,10 @@
               (select [max [slot-value 'journal-comment 'date]]
                       :from [journal-comment]
                       :flatp t))
+             0)
+         (or (single-object
+              (select [max [slot-value 'journal-trackback 'date]]
+                      :from [journal-trackback]
+                      :flatp t))
              0))
     #.(restore-sql-reader-syntax-state)))
