@@ -402,7 +402,7 @@ ELEMENT-TYPE as the stream's."
                             (cl-base64:usb8-array-to-base64-string
                              (ironclad:digest-sequence
                               :sha1
-                              (map 'vector #'char-code (format nil "~A~A~A" nonce timestamp *wsse-key*)))))))
+                              (map '(simple-array (unsigned-byte 8)) #'char-code (format nil "~A~A~A" nonce timestamp *wsse-key*)))))))
       (declare (ignore user))
       (if (and (stringp our-digest)
                (stringp their-digest)
