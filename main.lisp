@@ -52,6 +52,7 @@
                                       ((string= "preview" (car (last *subpath*))) :preview-entry)
                                       ((string= "trackback" (car (last *subpath*))) :post-trackback)
                                       ((string= "save" (car (last *subpath*))) :save-entry)
+                                      ((string= "moderate" (car (last *subpath*))) :moderate)
                                       (*post-number*                      :view)
                                       (t                                  nil))))
          (*method*          (keywordify (gethash "REQUEST_METHOD" *http-env*)))
@@ -96,6 +97,7 @@
 
 
 (defun dispatch-admin-action ()
+  #.(locally-enable-sql-reader-syntax)
   (case *action*
     (:preview-entry (let ((entry (and *post-number*
                                       (find-entry *post-number*))))
@@ -124,7 +126,24 @@
                            (title-of entry) (getf *query* :title))
                      (update-records-from-instance entry)))
                  (show-web-journal))
-    (otherwise (show-web-journal))))
+    (:moderate (let* ((id (getf *query* :id nil))
+                      (type (getf *query* :type nil))
+                      (acceptp (getf *query* :acceptp nil))
+                      (table (if (string= type "trackback")
+                                 'journal_trackback
+                                 'journal_comment)))
+                 (with-transaction ()
+                   (when (and id type acceptp (string= acceptp "t"))
+                     (update-records table
+                                     :where [= [id] id]
+                                     :av-pairs `((spam_p "f"))))
+                   (when (and id type acceptp (string= acceptp "f"))
+                     (update-records table
+                                     :where [= [id] id]
+                                     :av-pairs `((spam_p "t")))))
+                 (show-moderation-page)))
+    (otherwise (show-web-journal)))
+  #.(restore-sql-reader-syntax-state))
 
 
 (defun dispatch-user-action ()

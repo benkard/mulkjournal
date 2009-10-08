@@ -47,6 +47,7 @@
         (:post-comment (values "/~D" post-id))
         (:trackback (values "/~D/trackback" post-id))
         (:save (values "/~D/save" post-id))
+        (:moderation-page "/moderate")
         (:css "/../journal.css")))))
 
 
@@ -278,39 +279,13 @@
       (<:div :class :journal-comments
        (<:h2 "Kommentare")
        (dolist (comment comments)
-         (with-slots (author body date id email website)
-             comment
-           (<:div :class :journal-comment
-                  :id (format nil "comment-~D" id)
-            (<:div :class :journal-comment-header
-             (<:as-html (format nil "(~A) "
-                                (format-date nil "%day%.%mon%.%yr%, %hr%:%min%" date)))
-             (<:a :href website :rel "nofollow"
-              (<:as-html (format nil "~A" author)))
-             (<:as-html " meint: "))
-            (<:div :class :journal-comment-body
-             (<:as-html (render-comment-body body))))))))
+         (show-comment comment))))
 
     (when (and comments-p (not (null trackbacks)))
       (<:div :class :journal-comments
        (<:h2 "Trackbacks")
        (dolist (trackback trackbacks)
-         (with-slots (title excerpt date id url blog-name)
-             trackback
-           (<:div :class :journal-comment
-                  :id (format nil "trackback-~D" id)
-            (<:div :class :journal-comment-header
-                   (<:as-html (format nil "(~A) "
-                                      (format-date nil "%day%.%mon%.%yr%, %hr%:%min%" date)))
-                   (<:strong (<:as-html (format nil "~A " (or blog-name url))))
-                   (if (null title)
-                       (<:a :href url :rel "nofollow" (<:as-html "schreibt hierzu:"))
-                       (progn
-                         (<:as-html "schreibt hierzu im Artikel ")
-                         (<:a :href url :rel "nofollow" (<:as-html (format nil "~A" title)))
-                         (<:as-html ":"))))
-            (<:div :class :journal-comment-body
-             (<:as-html (render-comment-body excerpt))))))))
+         (show-trackback trackback))))
 
     (when comments-p
       (<:as-is (format nil "<!--
@@ -490,6 +465,90 @@
        (show-journal-entry (find-entry *post-number*) :comments-p t))))
   #.(restore-sql-reader-syntax-state))
 
+
+(defun show-comment (comment)
+  (with-slots (author body date id email website)
+      comment
+    (<:div :class :journal-comment
+           :id (format nil "comment-~D" id)
+     (<:div :class :journal-comment-header
+      (<:as-html (format nil "(~A) "
+                         (format-date nil "%day%.%mon%.%yr%, %hr%:%min%" date)))
+      (<:a :href website :rel "nofollow"
+       (<:as-html (format nil "~A" author)))
+      (<:as-html " meint: "))
+     (<:div :class :journal-comment-body
+      (<:as-html (render-comment-body body))))))
+
+(defun show-trackback (trackback)
+  (with-slots (title excerpt date id url blog-name)
+      trackback
+    (<:div :class :journal-comment
+           :id (format nil "trackback-~D" id)
+     (<:div :class :journal-comment-header
+            (<:as-html (format nil "(~A) "
+                               (format-date nil "%day%.%mon%.%yr%, %hr%:%min%" date)))
+            (<:strong (<:as-html (format nil "~A " (or blog-name url))))
+            (if (null title)
+                (<:a :href url :rel "nofollow" (<:as-html "schreibt hierzu:"))
+                (progn
+                  (<:as-html "schreibt hierzu im Artikel ")
+                  (<:a :href url :rel "nofollow" (<:as-html (format nil "~A" title)))
+                  (<:as-html ":"))))
+     (<:div :class :journal-comment-body
+      (<:as-html (render-comment-body excerpt))))))
+
+(defun show-moderation-page ()
+  #.(locally-enable-sql-reader-syntax)
+  (revalidate-cache-or-die "text/html; charset=UTF-8")
+  (with-web-journal (nil)
+    (<:h2 (<:as-html "Trackbacks"))
+    (dolist (trackback (select 'journal-trackback :flatp t :order-by '([date]) :where (clsql:sql-null [spam_p])))
+      (<:hr)
+      (<:form :action (link-to :moderation-page)
+              :method "post"
+              :accept-charset "UTF-8"
+              :enctype "application/x-www-form-urlencoded"
+              :style "display: inline"
+        (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of trackback)))
+        (<:input :type "hidden" :name "type" :value "trackback")
+        (<:input :type "hidden" :name "acceptp" :value "f")
+        (<:button :type "submit" (<:as-is "Verwerfen")))
+      (<:form :action (link-to :moderation-page)
+              :method "post"
+              :accept-charset "UTF-8"
+              :enctype "application/x-www-form-urlencoded"
+              :style "display: inline"
+        (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of trackback)))
+        (<:input :type "hidden" :name "type" :value "trackback")
+        (<:input :type "hidden" :name "acceptp" :value "t")
+        (<:button :type "submit" (<:as-is "Annehmen")))
+      (<:div (<:as-html "Zu: ") (<:a :href (link-to :view :post-id (id-of (entry-of trackback)) :absolute t) (<:as-html (title-of (entry-of trackback)))))
+      (show-trackback trackback))
+    (<:h2 (<:as-html "Kommentare"))
+    (dolist (comment (select 'journal-comment :flatp t :order-by '([date]) :where (clsql:sql-null [spam_p])))
+      (<:hr)
+      (<:form :action (link-to :moderation-page)
+              :method "post"
+              :accept-charset "UTF-8"
+              :enctype "application/x-www-form-urlencoded"
+              :style "display: inline"
+        (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of comment)))
+        (<:input :type "hidden" :name "type" :value "comment")
+        (<:input :type "hidden" :name "acceptp" :value "f")
+        (<:button :type "submit" (<:as-is "Verwerfen")))
+      (<:form :action (link-to :moderation-page)
+              :method "post"
+              :accept-charset "UTF-8"
+              :enctype "application/x-www-form-urlencoded"
+              :style "display: inline"
+        (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of comment)))
+        (<:input :type "hidden" :name "type" :value "comment")
+        (<:input :type "hidden" :name "acceptp" :value "t")
+        (<:button :type "submit" (<:as-is "Annehmen")))
+      (<:div (<:as-html "Zu: ") (<:a :href (link-to :view :post-id (id-of (entry-of comment)) :absolute t) (<:as-html (title-of (entry-of comment)))))
+      (show-comment comment)))
+  #.(restore-sql-reader-syntax-state))
 
 (defun preview-entry (title body id)
   (with-web-journal (title)
