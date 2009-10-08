@@ -45,6 +45,7 @@
                      (t "/")))
         ((:edit :preview) (values "/~D/preview" post-id))
         (:post-comment (values "/~D" post-id))
+        (:trackback (values "/~D/trackback" post-id))
         (:save (values "/~D/save" post-id))
         (:css "/../journal.css")))))
 
