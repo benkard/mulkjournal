@@ -52,6 +52,11 @@
          :accessor body-of
          :initarg :body
          :initform "")
+   (type :type string
+         :db-constraints :not-null
+         :accessor entry-type-of
+         :initarg :type
+         :initform "markdown")
    (categories :db-kind :join
                :db-constraints :not-null
                :accessor categories-of
