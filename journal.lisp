@@ -139,7 +139,7 @@
 (defun show-atom-entry-xml (journal-entry &key full-content include-edit-links)
   (flet ((atom-time (time)
            (format-date nil
-                        "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2secZ%"
+                        "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
                         time
                         0)))
     (with-slots (title date body categories last-modification id)
