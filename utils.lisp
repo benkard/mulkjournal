@@ -23,6 +23,10 @@
 (in-package #:mulk.journal)
 
 
+(defun debug-log (thing)
+  (format *error-output* "~S " thing)
+  thing)
+
 (defun keywordify (thing)
   (if (null thing)
       thing
