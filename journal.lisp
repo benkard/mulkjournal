@@ -181,7 +181,7 @@
 
   (flet ((atom-time (time)
            (format-date nil
-                        "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2secZ%"
+                        "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
                         time
                         0)))
     (with-xml-output (*standard-output* :encoding "utf-8")
