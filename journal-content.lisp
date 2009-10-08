@@ -246,6 +246,26 @@
   (declare (ignore ordered-p))
   (setf (%comments-about journal-entry) new-value))
 
+(defmethod trackbacks-about ((journal-entry journal-entry) &key ordered-p ham-p)
+  #.(locally-enable-sql-reader-syntax)
+  (prog1 (if ordered-p
+             (if ham-p
+                 (select 'journal-trackback
+                         :where [and [= [slot-value 'journal-trackback 'entry-id]
+                                        (id-of journal-entry)]
+                                     [= [slot-value 'journal-trackback 'spam-p]
+                                        "f"]]
+                         :order-by '([date])
+                         :flatp t)
+                 (select 'journal-trackback
+                         :where [= [slot-value 'journal-trackback 'entry-id]
+                                   (id-of journal-entry)]
+                         :order-by '([date])
+                         :flatp t))
+             (if ham-p
+                 (trackbacks-about journal-entry :ordered-p t :ham-p t)
+                 (%trackbacks-about journal-entry)))
+    #.(restore-sql-reader-syntax-state)))
 
 (defmethod (setf trackbacks-about) (new-value
                                     (journal-entry journal-entry)
