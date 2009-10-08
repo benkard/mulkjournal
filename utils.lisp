@@ -390,7 +390,9 @@ ELEMENT-TYPE as the stream's."
                           (subseq *wsse* (elt regstarts 1) (elt regends 1))
                           params)))
     (let* ((timestamp (cdr (assoc "created" params :test 'equalp)))
-           (time (cybertiggyr-time:parse-time timestamp))
+           (time (and (stringp timestamp)
+                      (cybertiggyr-time:parse-time timestamp
+                                                   (list (cybertiggyr-time::make-fmt-recognizer "%Y-%m-%dT%H:%M:%SZ")))))
            (nonce (cdr (assoc "nonce" params :test 'equalp)))
            (user (cdr (assoc "username" params :test 'equalp)))
            (their-digest (cdr (assoc "passworddigest" params :test 'equalp)))
