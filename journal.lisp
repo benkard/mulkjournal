@@ -59,7 +59,7 @@
 
   (flet ((atom-time (time)
            (format-date nil
-                        "%4yr-%2mon-%2dayT%2hr:%2min:%2secZ"
+                        "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
                         time
                         0)))
     (with-xml-output (*standard-output* :encoding "utf-8")
@@ -132,7 +132,7 @@
 
   (flet ((atom-time (time)
            (format-date nil
-                        "%4yr-%2mon-%2dayT%2hr:%2min:%2secZ"
+                        "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2secZ%"
                         time
                         0)))
     (with-xml-output (*standard-output* :encoding "utf-8")
@@ -224,7 +224,7 @@
      (<:td (<:a :href (link-to :view :post-id id)
             (<:as-html title)))
      (<:td :style "text-align: right"
-      (<:as-is (format-date nil "%day.%mon.%yr,&nbsp;%hr:%2min" posting-date)))
+      (<:as-is (format-date nil "%day%.%mon%.%yr%,&nbsp;%hr%:%2min%" posting-date)))
      (<:td (<:a :href (link-to :view :post-id id)
             (<:as-is
              (format nil "~D&nbsp;Kommentar~:*~[e~;~:;e~]" (length comments)))))))
@@ -236,7 +236,7 @@
      (<:div :class :journal-entry-header
       (<:span :class :journal-entry-date
        (<:as-html
-        (format-date nil "%@day-of-week, den %day.%mon.%yr, %hr:%2min."
+        (format-date nil "%@day-of-week%, den %day%.%mon%.%yr%, %hr%:%2min%."
                      posting-date)))
       (unless (null categories)
         (<:span :class :journal-entry-category
@@ -284,7 +284,7 @@
                   :id (format nil "comment-~D" id)
             (<:div :class :journal-comment-header
              (<:as-html (format nil "(~A) "
-                                (format-date nil "%day.%mon.%yr, %hr:%min" date)))
+                                (format-date nil "%day%.%mon%.%yr%, %hr%:%min%" date)))
              (<:a :href website :rel "nofollow"
               (<:as-html (format nil "~A" author)))
              (<:as-html " meint: "))
@@ -301,7 +301,7 @@
                   :id (format nil "trackback-~D" id)
             (<:div :class :journal-comment-header
                    (<:as-html (format nil "(~A) "
-                                      (format-date nil "%day.%mon.%yr, %hr:%min" date)))
+                                      (format-date nil "%day%.%mon%.%yr%, %hr%:%min%" date)))
                    (<:strong (<:as-html (format nil "~A " (or blog-name url))))
                    (if (null title)
                        (<:a :href url :rel "nofollow" (<:as-html "schreibt hierzu:"))

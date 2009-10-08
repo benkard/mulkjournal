@@ -82,6 +82,23 @@
     (6 "Sonntag")))
 
 
+(defmacro literal-casequal (thing &body clauses)
+  (let ((thing-sym (gensym "case-object"))
+        (map-sym (gensym "dispatch-table"))
+        (map-sym2 (gensym "load-time-dispatch-table")))
+    `(let ((,thing-sym ,thing)
+           (,map-sym (load-time-value
+                      (let ((,map-sym2 (make-hash-table :test 'equal)))
+                        ,@(mapcar (lambda (clause)
+                                    `(setf (gethash ,(first clause) ,map-sym2)
+                                           ,(position clause clauses)))
+                                  clauses)
+                        ,map-sym2))))
+       (case (gethash ,thing-sym ,map-sym)
+         ,@(mapcar (lambda (clause)
+                     `(,(position clause clauses) ,(second clause)))
+                   clauses)))))
+
 (defun %real-format-date (destination date-control-string universal-time
                           &optional (time-zone nil time-zone-supplied-p))
   "Format DATE according to the description given by DATE-FORMAT-STRING.
@@ -98,37 +115,36 @@ after another in any arbitrary order."
          (if time-zone-supplied-p
              (decode-universal-time universal-time time-zone)
              (decode-universal-time universal-time))
-       (let ((first-match-p t))
-         (ppcre:do-matches (start end "%[^%]*" date-control-string)
-           (let ((substring (subseq date-control-string start end)))
+       (let ((first-match-p t)
+             (last-match-end 0))
+         (ppcre:do-matches (start end "%[^%]*%" date-control-string)
+           (let ((substring (subseq date-control-string (1+ start) (1- end))))
+             (format out (subseq date-control-string last-match-end start))
              (multiple-value-bind (control value offset)
-                 (regex-case substring
-                   ("^%day-of-week"  (values "~D" day-of-week 12))
-                   ("^%@day-of-week" (values "~A"
-                                             (name-of-day day-of-week)
-                                             13))
-                   ("^%daylight-p"   (values "~A" daylight-p  11))
-                   ("^%zone"         (values "~D" zone 5))
-                   ("^%day"          (values "~D" day  4))
-                   ("^%mon"          (values "~D" mon  4))
-                   ("^%yr"           (values "~D" yr   3))
-                   ("^%sec"          (values "~D" sec  4))
-                   ("^%min"          (values "~D" min  4))
-                   ("^%hr"           (values "~D" hr   3))
-                   ("^%2day"         (values "~2,'0D" day  5))
-                   ("^%2mon"         (values "~2,'0D" mon  5))
-                   ("^%4yr"          (values "~4,'0D" yr   4))
-                   ("^%2sec"         (values "~2,'0D" sec  5))
-                   ("^%2min"         (values "~2,'0D" min  5))
-                   ("^%2hr"          (values "~2,'0D" hr   4)))
-               (when first-match-p
-                 (format out (subseq date-control-string 0 start))
-                 (setf first-match-p nil))
+                 (literal-casequal substring
+                   ("day-of-week"  (values "~D" day-of-week 11))
+                   ("@day-of-week" (values "~A"
+                                           (name-of-day day-of-week)
+                                           12))
+                   ("daylight-p"   (values "~A" daylight-p  10))
+                   ("zone"         (values "~D" zone 4))
+                   ("day"          (values "~D" day  3))
+                   ("mon"          (values "~D" mon  3))
+                   ("yr"           (values "~D" yr   2))
+                   ("sec"          (values "~D" sec  3))
+                   ("min"          (values "~D" min  3))
+                   ("hr"           (values "~D" hr   2))
+                   ("2day"         (values "~2,'0D" day  4))
+                   ("2mon"         (values "~2,'0D" mon  4))
+                   ("4yr"          (values "~4,'0D" yr   3))
+                   ("2sec"         (values "~2,'0D" sec  4))
+                   ("2min"         (values "~2,'0D" min  4))
+                   ("2hr"          (values "~2,'0D" hr   3)))
                (if control
-                   (progn
-                     (format out control value)
-                     (format out "~A" (subseq substring offset)))
-                   (format out "~A" substring))))))))))
+                   (format out control value)
+                   (format out "%~A%" substring))
+               (setq last-match-end end))))
+         (format destination (subseq date-control-string last-match-end)))))))
 
 
 (defun compute-script-last-modified-date ()
