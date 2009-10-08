@@ -206,20 +206,20 @@
                          (cond
                            ((getf *query* :url)
                             (push trackback (trackbacks-about entry))
+                            (with-slots (spam-p) trackback
+                               (setq spam-p (detect-spam trackback
+                                                         :referrer (gethash "HTTP_REFERER" *http-env*))))
+                            (update-records-from-instance trackback)
+                            (update-records-from-instance entry)
+                            (unless (spamp trackback)
+                              (update-records 'journal_trackback
+                                              :where [= [slot-value 'journal-trackback 'id] (id-of trackback)]
+                                              :av-pairs `((spam_p nil))))
+                            (when (eq *site* :nfs.net)
+                              (mail-trackback *notification-email* trackback entry))
                             (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>0</error>~&</response>"))
                            (t
-                            (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>1</error>~&<message>No URI was provided.</message>~&</response>")))
-                         (with-slots (spam-p) trackback
-                           (setq spam-p (detect-spam trackback
-                                                     :referrer (gethash "HTTP_REFERER" *http-env*))))
-                         (update-records-from-instance trackback)
-                         (update-records-from-instance entry)
-                         (unless (spamp trackback)
-                           (update-records 'journal_trackback
-                                           :where [= [slot-value 'journal-trackback 'id] (id-of trackback)]
-                                           :av-pairs `((spam_p nil))))
-                         (when (eq *site* :nfs.net)
-                           (mail-trackback *notification-email* trackback entry)))))
+                            (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>1</error>~&<message>No URI was provided.</message>~&</response>"))))))
     (:view-atom-feed (show-atom-feed))
     (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))
