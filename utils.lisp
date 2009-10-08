@@ -393,7 +393,9 @@ ELEMENT-TYPE as the stream's."
            (time (and (stringp timestamp)
                       (cybertiggyr-time:parse-time timestamp
                                                    (list (cybertiggyr-time::make-fmt-recognizer "%Y-%m-%dT%H:%M:%SZ")))))
-           (nonce (cdr (assoc "nonce" params :test 'equalp)))
+           (encoded-nonce (cdr (assoc "nonce" params :test 'equalp)))
+           (nonce (and encoded-nonce
+                       (cl-base64:base64-string-to-string encoded-nonce)))
            (user (cdr (assoc "username" params :test 'equalp)))
            (their-digest (cdr (assoc "passworddigest" params :test 'equalp)))
            (our-digest (and (stringp nonce)
