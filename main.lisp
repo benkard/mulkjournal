@@ -90,7 +90,11 @@
                                                (:mst-plus #p"/usr/lib/")
                                                (:nfs.net #p"/usr/local/lib/")))))
     (when (null *action*)
-      (setq *action* (if *post-number* :view :index)))
+      (setq *action* (if *post-number*
+                         (if (eq *method* :post)
+                             :post-trackback
+                             :view)
+                         :index)))
     (clsql:push-library-path *script-dir*)
     (clsql:push-library-path #p"/usr/local/lib/")
     (push *script-dir* clsql-sys:*foreign-library-search-paths*)
