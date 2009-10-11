@@ -5,7 +5,7 @@ if test -e /home/mulk; then
     LISPINIT_DIR="$DIR"
 else
     # NearlyFreeSpeech.NET.
-    LISPINIT_DIR=/home/protected/journal
+    LISPINIT_DIR="$NFSN_SITE_ROOT/protected/journal"
 fi
 
 exec env LC_ALL=de_DE.UTF-8 clisp -M "$LISPINIT_DIR/lispinit.mem.gz" "$DIR/run.lisp"
