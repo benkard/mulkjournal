@@ -14,13 +14,8 @@ mtime_of() {
 
 FASL_FILE="$LISPINIT_DIR/journal-full.fas"
 
-lisp_mtime=0
-for x in $DIR/*.lisp; do
-    mtime=`mtime_of "$x"`
-    if [ $mtime -gt $lisp_mtime ]; then
-        lisp_mtime=$mtime
-    fi
-done
+most_recently_changed_lisp_file=`ls -rt $DIR/*.lisp | tail -n1`
+lisp_mtime=`mtime_of $most_recently_changed_lisp_file`
 
 if ! [ -f "$FASL_FILE" -a \( `mtime_of "$FASL_FILE"` -gt $lisp_mtime \) ]; then
     env LC_ALL=de_DE.UTF-8 clisp -M "$LISPINIT_DIR/lispinit.mem.gz" "$DIR/compile.lisp" &&\
