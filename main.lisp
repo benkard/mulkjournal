@@ -139,7 +139,11 @@
                      (setf *post-number* (id-of entry))
                      (setf (body-of entry) (getf *query* :body)
                            (title-of entry) (getf *query* :title))
-                     (update-records-from-instance entry)))
+                     (update-records-from-instance entry)
+                     ;; Update static files.
+                     (update-index-page)
+                     (update-journal-entry-page entry)
+                     (update-atom-feed)))
                  (show-web-journal))
     (:moderate (let* ((id (getf *query* :id nil))
                       (type (getf *query* :type nil))
@@ -156,6 +160,8 @@
                      (update-records table
                                      :where [= [id] id]
                                      :av-pairs `((spam_p "t")))))
+                 ;; Update static files.
+                 (update-journal)
                  (show-moderation-page)))
     (:rebuild (http-send-headers "text/plain; charset=UTF-8")
               (update-journal)
@@ -223,7 +229,11 @@
                                            :where [= [slot-value 'journal-comment 'id] (id-of comment)]
                                            :av-pairs `((spam_p nil))))
                          (when (eq *site* :nfs.net)
-                           (mail-comment *notification-email* comment entry))))
+                           (mail-comment *notification-email* comment entry))
+                         ;; Update static files.
+                         (update-comment-feed)
+                         (update-journal-entry-page entry)
+                         (update-index-page)))
                      (show-web-journal))
     (:post-trackback (with-transaction ()
                        (let* ((entry (find-entry *post-number*))
@@ -256,7 +266,11 @@
                               (mail-trackback *notification-email* trackback entry))
                             (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>0</error>~&</response>"))
                            (t
-                            (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>1</error>~&<message>No URI was provided.</message>~&</response>"))))))
+                            (format t "<?xml version=\"1.0\" encoding=\"utf-8\"?>~&<response>~&<error>1</error>~&<message>No URI was provided.</message>~&</response>")))
+                         ;; Update static files.
+                         (update-comment-feed)
+                         (update-journal-entry-page entry)
+                         (update-index-page))))
     (:view-atom-entry
      (with-wsse-authentication ()
        (cond ((eq *method* :get)
@@ -301,7 +315,9 @@
                       (when title-element
                         (setf (title-of entry) (or (caddr title-element) "")))
                       (setf (entry-type-of entry) "html")))
-                  (update-records-from-instance entry)))
+                  (update-records-from-instance entry)
+                  ;; Update static files.
+                  (update-journal)))
               (show-atom-entry))
              (t (debug-log "Oops. Method was:") (debug-log *method*)))))
     (:view-atom-feed (show-atom-feed))
