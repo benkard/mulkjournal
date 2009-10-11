@@ -411,7 +411,7 @@
           (<:as-is "Ver&ouml;ffentlichen"))))))))
 
 
-(defun call-with-web-journal (page-title thunk)
+(defun call-with-web-journal (page-title thunk &key post-id)
   ;; TODO: Check how to make Squid not wait for the CGI script's
   ;;       termination, which makes generating a Last-Modified header
   ;;       feel slower to the end user rather than faster.
@@ -444,7 +444,9 @@
             :title "Kompottkins Weisheiten")
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :css))
     (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
-    (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name"))
+    (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name")
+    (when post-id
+      (<:link :rel "canonical" :type "text/html" :href (link-to :view :post-id post-id))))
    (<:body
     (<:div :id :main-title-box
      (<:h1 :id :main-title
@@ -491,7 +493,8 @@
   (with-web-journal ((if (member *action* '(:view :edit :preview :post-comment
                                             :save-entry))
                          (title-of (find-entry *post-number*))
-                         nil))
+                         nil)
+                     :post-id (when (eq *action* :view) *post-number*))
     (case *action*
       ((:index nil)
        (let ((entries (select 'journal-entry
@@ -729,7 +732,7 @@
        (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
          (with-yaclml-stream *standard-output*
            (let ((*mode* :file))
-             (with-web-journal (title)
+             (with-web-journal (title :post-id id)
                (show-journal-entry entry :comments-p t))))))))
 
 (defun update-atom-feed ()
