@@ -19,7 +19,7 @@ lisp_mtime=`mtime_of $most_recently_changed_lisp_file`
 
 if ! [ -f "$FASL_FILE" -a \( `mtime_of "$FASL_FILE"` -gt $lisp_mtime \) ]; then
     env LC_ALL=de_DE.UTF-8 clisp -M "$LISPINIT_DIR/lispinit.mem.gz" "$DIR/compile.lisp" &&\
-    find "$DIR" -name "*.fas" -print0 | xargs -0 cat > "$FASL_FILE"
+    (cd "$DIR" && cat cybertiggyr-time/time.fas xmls/xmls.fas ironclad/package.fas ironclad/macro-utils.fas ironclad/digest.fas ironclad/sha1.fas defpackage.fas macros.fas globals.fas utils.fas journal-content.fas journal.fas main.fas > "$FASL_FILE")
 fi
 
 exec env LC_ALL=de_DE.UTF-8 clisp -q -q -M "$LISPINIT_DIR/lispinit.mem.gz" -x "(progn (load \"$FASL_FILE\") (cl-user::script-main :admin-mode t))"
