@@ -356,7 +356,7 @@
         dc:title=\"~A\"
         trackback:ping=\"~A\" />
     </rdf:RDF>
--->" (link-to :view :post-id id :absolute t) title (link-to :trackback :post-id id :absolute t)))
+-->" (link-to :view :post-id id :absolute t) (ppcre:regex-replace "--" title "&#8212;") (link-to :trackback :post-id id :absolute t)))
       (<:div :class :journal-new-comment
        (<:h2 "Neuen Kommentar schreiben")
        (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
