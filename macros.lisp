@@ -39,7 +39,7 @@
 
 
 (defmacro with-web-journal ((page-title &key post-id) &body body)
-  `(call-with-web-journal ,page-title #'(lambda () ,@body) :post-id post-id))
+  `(call-with-web-journal ,page-title #'(lambda () ,@body) :post-id ,post-id))
 
 
 (defmacro with-result-cache ((cache-id &key (younger-than nil younger-than-p))
