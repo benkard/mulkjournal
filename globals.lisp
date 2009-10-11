@@ -81,3 +81,7 @@
 (defparameter *if-modified-since* nil)
 (defparameter *wsse* nil)
 (defparameter *wsse-key* nil)
+
+(defparameter *mode* :http  ;either :HTTP or :FILE
+  "Whether we are serving stuff dynamically over HTTP or storing it into
+   files for later static service.")

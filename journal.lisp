@@ -55,9 +55,10 @@
 (defun show-comment-feed ()
   #.(locally-enable-sql-reader-syntax)
   (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
-  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
-  (http-add-header "Content-Language" "de")
-  (http-send-headers "application/atom+xml; charset=UTF-8")
+  (when (eq *mode* :http)
+    (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+    (http-add-header "Content-Language" "de")
+    (http-send-headers "application/atom+xml; charset=UTF-8"))
 
   (flet ((atom-time (time)
            (format-date nil
@@ -128,9 +129,10 @@
 (defun show-atom-entry ()
   #.(locally-enable-sql-reader-syntax)
   (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
-  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
-  (http-add-header "Content-Language" "de")
-  (http-send-headers "application/atom+xml; charset=UTF-8")
+  (when (eq *mode* :http)
+    (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+    (http-add-header "Content-Language" "de")
+    (http-send-headers "application/atom+xml; charset=UTF-8"))
 
   (with-xml-output (*standard-output* :encoding "utf-8")
     (show-atom-entry-xml (find-entry *post-number*) :full-content t :include-edit-links t)))
@@ -184,9 +186,10 @@
 (defun show-atom-feed (&key include-edit-links full-content)
   #.(locally-enable-sql-reader-syntax)
   (revalidate-cache-or-die "application/atom+xml; charset=UTF-8")
-  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
-  (http-add-header "Content-Language" "de")
-  (http-send-headers "application/atom+xml; charset=UTF-8")
+  (when (eq *mode* :http)
+    (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+    (http-add-header "Content-Language" "de")
+    (http-send-headers "application/atom+xml; charset=UTF-8"))
 
   (flet ((atom-time (time)
            (format-date nil
@@ -413,10 +416,11 @@
   ;;       termination, which makes generating a Last-Modified header
   ;;       feel slower to the end user rather than faster.
   ;;
-  (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
-  (http-add-header "Content-Language" "de")
-  (http-add-header "Cache-Control" "public")
-  (http-send-headers "text/html; charset=UTF-8")
+  (when (eq *mode* :http)
+    (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
+    (http-add-header "Content-Language" "de")
+    (http-add-header "Cache-Control" "public")
+    (http-send-headers "text/html; charset=UTF-8"))
 
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
           :lang "de"

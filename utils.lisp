@@ -368,6 +368,7 @@ ELEMENT-TYPE as the stream's."
                 (excerpt-of comment))))
 
 (defun revalidate-cache-or-die (content-type)
+  (when (eq *mode* :http)
   #+clisp
     (when *if-modified-since*
       (let* ((date-recognisers (mapcar #'cybertiggyr-time::make-fmt-recognizer '("%A, %d-%B-%y %H:%M:%S GMT" "%A, %d %B %Y %H:%M:%S GMT" "%A %B %d %H:%M:%S %Y")))
@@ -380,7 +381,7 @@ ELEMENT-TYPE as the stream's."
           (http-send-headers content-type)
           (ext:quit 0))))
   #-clisp
-    nil)
+    nil))
 
 
 (defun call-with-wsse-authentication (thunk)
