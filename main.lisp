@@ -152,13 +152,21 @@
                    (when (and id type acceptp (string= acceptp "t"))
                      (update-records table
                                      :where [= [id] id]
-                                     :av-pairs `((spam_p "f"))))
+                                     :av-pairs `((spam_p "f")))
+                     ;; Update static files.
+                     (update-index-page)
+                     (update-comment-feed)
+                     (let ((comment/trackback (single-object (select table
+                                                                     :where [= [id] id]
+                                                                     :flatp t))))
+                       (update-journal-entry-page (entry-of comment/trackback))))
                    (when (and id type acceptp (string= acceptp "f"))
+                     ;; In the negative case, there is no need to update
+                     ;; any static files, as nothing will have changed
+                     ;; there.
                      (update-records table
                                      :where [= [id] id]
                                      :av-pairs `((spam_p "t")))))
-                 ;; Update static files.
-                 (update-journal)
                  (show-moderation-page)))
     (:rebuild (http-send-headers "text/plain; charset=UTF-8")
               (update-journal)
@@ -227,10 +235,9 @@
                                            :av-pairs `((spam_p nil))))
                          (when (eq *site* :nfs.net)
                            (mail-comment *notification-email* comment entry))
-                         ;; Update static files.
-                         (update-comment-feed)
-                         (update-journal-entry-page entry)
-                         (update-index-page)))
+                         ;; Do not update static files, as the comment
+                         ;; will be waiting for moderation anyway.
+                         ))
                      (show-web-journal))
     (:post-trackback (with-transaction ()
                        (let* ((entry (find-entry *post-number*))
