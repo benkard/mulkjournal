@@ -712,7 +712,8 @@
   (let ((file-path (merge-pathnames "index.xhtml" *static-dir*)))
     (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
       (with-yaclml-stream *standard-output*
-        (let ((*mode* :file))
+        (let ((*mode* :file)
+              (*action* :index))
           (show-web-journal))))))
 
 (defun update-all-journal-entry-pages ()
