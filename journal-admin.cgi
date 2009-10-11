@@ -22,4 +22,4 @@ if ! [ -f "$FASL_FILE" -a \( `mtime_of "$FASL_FILE"` -gt $lisp_mtime \) ]; then
     find "$DIR" -name "*.fas" -print0 | xargs -0 cat > "$FASL_FILE"
 fi
 
-exec env LC_ALL=de_DE.UTF-8 clisp -q -q -M "$LISPINIT_DIR/lispinit.mem.gz" -x "(progn (load \"$FASL_FILE\") (cl-user::script-main))" --admin-mode
+exec env LC_ALL=de_DE.UTF-8 clisp -q -q -M "$LISPINIT_DIR/lispinit.mem.gz" -x "(progn (load \"$FASL_FILE\") (cl-user::script-main :admin-mode t))"

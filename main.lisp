@@ -307,7 +307,7 @@
 
 
 #+clisp
-(defun journal-main ()
+(defun journal-main (&key admin-mode)
   (let ((encoding (ext:make-encoding :charset charset:utf-8)))
     (ext:letf* ((custom:*terminal-encoding* encoding)
                 (custom:*foreign-encoding* encoding)
@@ -316,15 +316,13 @@
                 (custom:*default-file-encoding* encoding))
       (with-initialised-journal
         (let ((*random-state* (make-random-state t)))
-          (if (member "--admin-mode"
-                      (coerce (ext:argv) 'list)
-                      :test #'string=)
+          (if admin-mode
               (dispatch-admin-action)
               (dispatch-user-action)))))))
 
 
 #+clisp
-(defun cl-user::script-main ()
+(defun cl-user::script-main (&key admin-mode)
   (dolist (env-var '("HTTP_CACHE_CONTROL" "HTTP_IF_MODIFIED_SINCE"))
     (pushnew env-var http::*http-env-vars*))
   (http:http-init)
@@ -344,4 +342,4 @@
             (<:pre (<:as-html (with-output-to-string (out)
                                 #+clisp (system::pretty-print-condition e out)
                                 #+clisp (system::print-backtrace :out out)))))))))
-    (journal-main)))
+    (journal-main :admin-mode admin-mode)))
