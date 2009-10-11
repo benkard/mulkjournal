@@ -709,7 +709,7 @@
   (update-comment-feed))
 
 (defun update-index-page ()
-  (let ((file-path (merge-pathnames "index.html" *static-dir*)))
+  (let ((file-path (merge-pathnames "index.xhtml" *static-dir*)))
     (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
       (with-yaclml-stream *standard-output*
         (let ((*mode* :file))
@@ -723,7 +723,7 @@
 
 (defun update-journal-entry-page (entry)
   (with-slots (id title) entry
-     (let* ((file-name (format nil "~D.html" id))
+     (let* ((file-name (format nil "~D.xhtml" id))
             (file-path (merge-pathnames file-name *static-dir*)))
        (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
          (with-yaclml-stream *standard-output*
