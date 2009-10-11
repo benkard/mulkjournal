@@ -356,4 +356,6 @@
             (<:pre (<:as-html (with-output-to-string (out)
                                 #+clisp (system::pretty-print-condition e out)
                                 #+clisp (system::print-backtrace :out out)))))))))
-    (journal-main :admin-mode admin-mode)))
+    (journal-main :admin-mode (member "--admin-mode"
+                                      (coerce (ext:argv) 'list)
+                                      :test #'string=))))
