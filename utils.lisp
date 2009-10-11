@@ -422,6 +422,8 @@ ELEMENT-TYPE as the stream's."
                                       (string= their-digest our-digest))
                                  "Time stamp too old."
                                  "Wrong user name or password."))
+            (debug-log "Authentication failed.  Their WSSE info was: ")
+            (debug-log *wsse*)
             (http-send-headers)
             #+clisp (ext:quit 0))))))
 
