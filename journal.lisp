@@ -31,7 +31,7 @@
                          ;; use /journal as a relative URI, because it
                          ;; won't work.
                          (if (eq *site* :mst-plus)
-                             (gethash "SCRIPT_NAME" *http-env* "")
+                             (http-getenv "SCRIPT_NAME")
                              "/journal")))
     (multiple-value-call
         #'(lambda (&rest args) (apply #'format out args))

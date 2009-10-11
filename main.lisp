@@ -26,10 +26,9 @@
 (defun call-with-initialised-journal (func)
   (let* ((*site*            (if (file-exists-p #p"/home/mulk") :mst-plus :nfs.net))
          (*debugging-p*     (eq *site* :mst-plus))
-         (*http-env*        (http-get-env-vars))
-         (*subpath-query*   (subseq (gethash "REQUEST_URI" *http-env*)
+         (*subpath-query*   (subseq (http-getenv "REQUEST_URI")
                                     (length (ecase *site*
-                                              (:mst-plus (gethash "SCRIPT_NAME" *http-env*))
+                                              (:mst-plus (http-getenv "SCRIPT_NAME"))
                                               (:nfs.net "/journal")))))
          (*subpath-string*  (subseq *subpath-query*
                                     0
@@ -47,31 +46,27 @@
                                       ((string= "atom" (car (last *subpath*))) :view-atom-entry)
                                       ((string= "rebuild" (car (last *subpath*))) :rebuild)
                                       (t nil))))
-         (*query*           #+clisp (if (eq *action* :view-atom-entry)
-                                        nil
-                                        (mapcan #'(lambda (param)
-                                                    (list (keywordify param)
-                                                          (http-query-parameter param)))
-                                                (http-query-parameter-list)))
-                            #-clisp '())
+         (*query*           (if (eq *action* :view-atom-entry)
+                                nil
+                                (mapcan #'(lambda (param)
+                                            (list (keywordify param)
+                                                  (http-query-parameter param)))
+                                        (http-query-parameter-list))) '())
          (*post-number*     (parse-integer (or (first *subpath*)
                                                (getf *query* :id ""))
                                            :junk-allowed t  #|| :radix 12 ||#))
-         (*method*          (keywordify (gethash "REQUEST_METHOD" *http-env*)))
-         (*if-modified-since* #+clisp (ext:getenv "HTTP_IF_MODIFIED_SINCE")
-                              #-clisp nil)
-         (*wsse* #+clisp (ext:getenv "HTTP_X_WSSE")
-                 #-clisp nil)
+         (*method*          (keywordify (http-getenv "REQUEST_METHOD")))
+         (*if-modified-since* (http-getenv "HTTP_IF_MODIFIED_SINCE"))
+         (*wsse* (http-getenv "HTTP_X_WSSE"))
          (*script-filename* (pathname-as-file
-                             (or (gethash "SCRIPT_FILENAME" *http-env*)
+                             (or (http-getenv "SCRIPT_FILENAME")
                                  "/home/mulk/Dokumente/Projekte/Mulkblog/journal.cgi")))
          (*script-dir*      (make-pathname
                              :directory (pathname-directory *script-filename*)))
          (*site-root*		(ecase *site*
                               (:mst-plus *script-dir*)
                               (:nfs.net
-                               #+clisp (format nil "~A/" (ext:getenv "NFSN_SITE_ROOT"))
-                               #-clisp (error "Don't know where to look for stuff."))))
+                               (format nil "~A/" (http-getenv "NFSN_SITE_ROOT")))))
          (*data-dir*        (ecase *site*
                               (:mst-plus *script-dir*)
                               (:nfs.net (merge-pathnames #p"protected/journal/"
@@ -185,12 +180,12 @@
                                   :email    (getf *query* :email)
                                   :website  (getf *query* :website)
                                   :body     (getf *query* :comment-body)
-                                  :submitter-ip (gethash "REMOTE_ADDR" *http-env*)
-                                  :submitter-user-agent (gethash "HTTP_USER_AGENT" *http-env*))))
+                                  :submitter-ip (http-getenv "REMOTE_ADDR")
+                                  :submitter-user-agent (http-getenv "HTTP_USER_AGENT"))))
                          (push comment (comments-about entry))
                          (with-slots (spam-p) comment
                            (setq spam-p (detect-spam comment
-                                                     :referrer (gethash "HTTP_REFERER" *http-env*)))
+                                                     :referrer (http-getenv "HTTP_REFERER")))
                            (when spam-p
                              (push (format nil
                                     "<p>Ihr Kommentar wurde als ~
@@ -247,15 +242,15 @@
                                   :title     (getf *query* :title)
                                   :excerpt   (getf *query* :excerpt)
                                   :url       (getf *query* :url)
-                                  :submitter-ip (gethash "REMOTE_ADDR" *http-env*)
-                                  :submitter-user-agent (gethash "HTTP_USER_AGENT" *http-env*))))
+                                  :submitter-ip (http-getenv "REMOTE_ADDR")
+                                  :submitter-user-agent (http-getenv "HTTP_USER_AGENT"))))
                          (http-send-headers "application/atom+xml; charset=UTF-8")
                          (cond
                            ((getf *query* :url)
                             (push trackback (trackbacks-about entry))
                             (with-slots (spam-p) trackback
                                (setq spam-p (detect-spam trackback
-                                                         :referrer (gethash "HTTP_REFERER" *http-env*))))
+                                                         :referrer (http-getenv "HTTP_REFERER"))))
                             (update-records-from-instance trackback)
                             (update-records-from-instance entry)
                             (unless (spamp trackback)
@@ -344,8 +339,6 @@
 
 #+clisp
 (defun cl-user::script-main (&key admin-mode)
-  (dolist (env-var '("HTTP_CACHE_CONTROL" "HTTP_IF_MODIFIED_SINCE"))
-    (pushnew env-var http::*http-env-vars*))
   (http:http-init)
   (setq cffi:*default-foreign-encoding* :iso-8859-15)
   (handler-bind

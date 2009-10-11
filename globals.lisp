@@ -34,9 +34,6 @@
 (defparameter *query* nil
   "The HTTP query string transformed into a property list.")
 
-(defparameter *http-env* nil
-  "A hash table of HTTP environment variables.")
-
 (defparameter *subpath-query* nil
   "The query string stripped of the script location.")
 
