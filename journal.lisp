@@ -279,7 +279,7 @@
   (unless *full-entry-view*
     (<:tr
      (<:td (<:a :href (link-to :view :post-id id)
-            (<:as-html title)))
+            (<:as-is title)))
      (<:td :style "text-align: right"
       (<:as-is (format-date nil "%day%.%mon%.%yr%,&nbsp;%hr%:%2min%" posting-date)))
      (<:td (<:a :href (link-to :view :post-id id)
@@ -289,7 +289,7 @@
   (when *full-entry-view*
     (<:div :class :journal-entry
      (<:h2 (<:a :href (link-to :view :post-id id)
-            (<:as-html title)))
+            (<:as-is title)))
      (<:div :class :journal-entry-header
       (<:span :class :journal-entry-date
        (<:as-html
@@ -426,9 +426,9 @@
           :lang "de"
    (<:head
     (<:title
-     (<:as-html
+     (<:as-is
       (if page-title
-          (format nil "~A -- Kompottkins Weisheiten" page-title)
+          (format nil "~A &#8212; Kompottkins Weisheiten" page-title)
           "Kompottkins Weisheiten")))
     (<:link :rel "alternate"
             :type "application/atom+xml"
