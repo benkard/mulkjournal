@@ -29,19 +29,18 @@
 ;;; been written for purposes of debugging, development and
 ;;; documentation.
 
-(defclass load-source-simple-op (asdf:operation) ())
-(defmethod asdf:perform ((o load-source-simple-op) (c asdf:component))
+(defclass compile-source-simple-op (asdf:operation) ())
+(defmethod asdf:perform ((o compile-source-simple-op) (c asdf:component))
   nil)
-(defmethod asdf:perform ((o load-source-simple-op) (m asdf:module))
+(defmethod asdf:perform ((o compile-source-simple-op) (m asdf:module))
   (dolist (c (asdf:module-components m))
-    (load (asdf:component-pathname c))))
+    (load (compile-file (asdf:component-pathname c)))))
 
 
 #+clisp
 (unless (asdf:find-system :mulk-journal nil)
   (let ((*package* (find-package :asdf)))
-    (load (merge-pathnames "mulk-journal.asd"
-                           system::*current-source-file*))))
+    (load (merge-pathnames "mulk-journal.asd" system::*current-source-file*))))
 
 
 ;;; The following does not generally work in a CGI setting because of
@@ -51,8 +50,4 @@
 ;;; our own files (no dependencies) using a manually loaded system
 ;;; definition (see above) works, which suffices for our needs.
 (unless (find-package '#:mulk.journal)
-  (asdf:oos 'load-source-simple-op '#:mulk-journal))
-
-
-#+clisp
-(script-main)
+  (asdf:oos 'compile-source-simple-op '#:mulk-journal))
