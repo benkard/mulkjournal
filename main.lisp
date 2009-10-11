@@ -51,7 +51,7 @@
                                 (mapcan #'(lambda (param)
                                             (list (keywordify param)
                                                   (http-query-parameter param)))
-                                        (http-query-parameter-list))) '())
+                                        (http-query-parameter-list))))
          (*post-number*     (parse-integer (or (first *subpath*)
                                                (getf *query* :id ""))
                                            :junk-allowed t  #|| :radix 12 ||#))
