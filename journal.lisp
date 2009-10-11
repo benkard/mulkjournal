@@ -446,7 +446,7 @@
     (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
     (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name")
     (when post-id
-      (<:link :rel "canonical" :type "text/html" :href (link-to :view :post-id post-id))))
+      (<:link :rel "canonical" :type "text/html" :href (link-to :view :post-id post-id :absolute t))))
    (<:body
     (<:div :id :main-title-box
      (<:h1 :id :main-title
