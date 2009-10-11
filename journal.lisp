@@ -458,7 +458,7 @@
           "NEU!  Jetzt ohne regelm&auml;&szlig;ige Serverabst&uuml;rze!"
           "NEU!  Jetzt mit mehr als 3 % Uptime!")))
       (<:as-is " &bull;&bull;&bull;")))
-    (when *journal-warnings*
+    (when (and *journal-warnings* (eq *mode* :http))
       (<:div :id :warnings
        (dolist (warning *journal-warnings*)
          (<:div :class :journal-warning
