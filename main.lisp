@@ -45,6 +45,7 @@
                                       ((string= "save" (car (last *subpath*))) :save-entry)
                                       ((string= "moderate" (car (last *subpath*))) :moderate)
                                       ((string= "atom" (car (last *subpath*))) :view-atom-entry)
+                                      ((string= "rebuild" (car (last *subpath*))) :rebuild)
                                       (t nil))))
          (*query*           #+clisp (if (eq *action* :view-atom-entry)
                                         nil
@@ -76,6 +77,7 @@
                               (:nfs.net (merge-pathnames #p"protected/journal/"
                                                          *site-root*))))
          (*cache-dir*       (merge-pathnames #p"cache/" *data-dir*))
+         (*static-dir*      (merge-pathnames #p"public/journal/" *site-root*))
          (*wordpress-key*   (with-open-file (file (merge-pathnames
                                                    "wordpress-api-key.key"
                                                    *data-dir*))
@@ -155,6 +157,9 @@
                                      :where [= [id] id]
                                      :av-pairs `((spam_p "t")))))
                  (show-moderation-page)))
+    (:rebuild (http-send-headers "text/plain; charset=UTF-8")
+              (update-journal)
+              (format t "~&Done."))
     (otherwise (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
 

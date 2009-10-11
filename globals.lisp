@@ -69,6 +69,9 @@
 (defparameter *cache-dir* nil
   "The directory used for caching generated markup.")
 
+(defparameter *static-dir* nil
+  "The directory which all the generated HTML files will live in.")
+
 (defparameter *wordpress-key* nil
   "The WordPress/Akismet API key to use.")
 

@@ -698,3 +698,47 @@
                  (<:h2 (<:as-html x))
                  (<:p "Type " (<:em (<:as-html (type-of y))) ".")
                  (<:pre (<:as-html (prin1-to-string y))))))))
+
+(defun update-journal ()
+  (format t "~&Updating index page...")
+  (update-index-page)
+  (format t "~&Updating individual journal entries...")
+  (update-all-journal-entry-pages)
+  (format t "~&Updating the news feeds...")
+  (update-atom-feed)
+  (update-comment-feed))
+
+(defun update-index-page ()
+  (let ((file-path (merge-pathnames "index.html" *static-dir*)))
+    (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
+      (with-yaclml-stream *standard-output*
+        (let ((*mode* :file))
+          (show-web-journal))))))
+
+(defun update-all-journal-entry-pages ()
+  #.(locally-enable-sql-reader-syntax)
+  (dolist (entry (select 'journal-entry :order-by '(([id] :asc)) :flatp t))
+    (update-journal-entry-page entry))
+  #.(restore-sql-reader-syntax-state))
+
+(defun update-journal-entry-page (entry)
+  (with-slots (id title) entry
+     (let* ((file-name (format nil "~D.html" id))
+            (file-path (merge-pathnames file-name *static-dir*)))
+       (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
+         (with-yaclml-stream *standard-output*
+           (let ((*mode* :file))
+             (with-web-journal (title)
+               (show-journal-entry entry :comments-p t))))))))
+
+(defun update-atom-feed ()
+  (let ((file-path (merge-pathnames "feed.xml" *static-dir*)))
+    (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
+      (let ((*mode* :file))
+        (show-atom-feed)))))
+
+(defun update-comment-feed ()
+  (let ((file-path (merge-pathnames "comment-feed.xml" *static-dir*)))
+    (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
+      (let ((*mode* :file))
+        (show-comment-feed)))))
