@@ -425,6 +425,13 @@
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
           :lang "de"
    (<:head
+    ;; This meta tag is, in fact, a lie, as we are actually
+    ;; application/xhtml+xml, but without it, the encoding can not be
+    ;; derived from the code alone by HTML parsers.  (It can be by XML
+    ;; parses because of the XML preamble.)  This would make saving the
+    ;; page on a disk inconvenient.
+    (<:meta :http-equiv "Content-Type"
+            :content "text/html; charset=UTF-8")
     (<:title
      (<:as-is
       (if page-title
