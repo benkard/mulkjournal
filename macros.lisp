@@ -41,8 +41,8 @@
   (emit-close-tag "html"))
 
 
-(defmacro with-web-journal ((page-title &key post-id) &body body)
-  `(call-with-web-journal ,page-title #'(lambda () ,@body) :post-id ,post-id))
+(defmacro with-web-journal ((page-title &key canonical-uri) &body body)
+  `(call-with-web-journal ,page-title #'(lambda () ,@body) :canonical-uri ,canonical-uri))
 
 
 (defmacro with-result-cache ((cache-id &key (younger-than nil younger-than-p))
