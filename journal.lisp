@@ -503,7 +503,7 @@
                          nil)
                      :canonical-uri (case *action*
                                       (:view
-                                       (link-to :view :post-id post-id :absolute t))
+                                       (link-to :view :post-id *post-number* :absolute t))
                                       ((:index nil)
                                        (link-to :index :absolute t))))
     (case *action*
