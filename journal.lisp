@@ -743,7 +743,7 @@
        (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
          (with-yaclml-stream *standard-output*
            (let ((*mode* :file))
-             (with-web-journal (title :canonical-uri (link-to :view :post-id post-id :absolute t))
+             (with-web-journal (title :canonical-uri (link-to :view :post-id id :absolute t))
                (show-journal-entry entry :comments-p t))))))))
 
 (defun update-atom-feed ()
