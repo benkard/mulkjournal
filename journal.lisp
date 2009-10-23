@@ -438,7 +438,7 @@
     ;; designed to work with small devices.  It's not so great when your
     ;; pages mostly consist of lots of text to read, though.  Therefore,
     ;; let's disable the default scaling here.
-    (<:meta :name "viewport" :content "initial-scale=1.0")
+    (<:meta :name "viewport" :content "initial-scale=1.0, width=device-width")
     (<:title
      (<:as-is
       (if page-title
