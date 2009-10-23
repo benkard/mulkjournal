@@ -432,6 +432,13 @@
     ;; page on a disk inconvenient.
     (<:meta :http-equiv "Content-Type"
             :content "text/html; charset=UTF-8")
+    ;; The iPhone's Mobile Safari browser scales all web pages by
+    ;; default in order to make them look as if on a PC-sized monitor.
+    ;; That's great for all those flashy web sites out there that aren't
+    ;; designed to work with small devices.  It's not so great when your
+    ;; pages mostly consist of lots of text to read, though.  Therefore,
+    ;; let's disable the default scaling here.
+    (<:meta :name "viewport" :id "iphone-viewport" :content "initial-scale=1.0")
     (<:title
      (<:as-is
       (if page-title
