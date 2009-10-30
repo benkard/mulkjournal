@@ -335,6 +335,7 @@
     (:xml-rpc (when (eq *method* :post)
                 (http-add-header "Content-Language" "de")
                 (http-send-headers "text/xml; charset=UTF-8")
+                (format t "~&<?xml version='1.0' encoding='utf-8'?>~%")
                 (write (let ((*xml-rpc-package*
                               (find-package '#:mulk.journal.xml-rpc)))
                          (s-xml-rpc::handle-xml-rpc-call *standard-input* 0))
