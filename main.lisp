@@ -26,10 +26,13 @@
 (defun call-with-initialised-journal (func)
   (let* ((*site*            (if (file-exists-p #p"/home/mulk") :mst-plus :nfs.net))
          (*debugging-p*     (eq *site* :mst-plus))
-         (*subpath-query*   (subseq (http-getenv "REQUEST_URI")
-                                    (length (ecase *site*
-                                              (:mst-plus (http-getenv "SCRIPT_NAME"))
-                                              (:nfs.net "/journal")))))
+         (*subpath-query*   (let ((uri (http-getenv "REQUEST_URI")))
+                              (if (string= uri "/RPC2")
+                                  "/RPC2"
+                                  (subseq uri
+                                          (length (ecase *site*
+                                                    (:mst-plus (http-getenv "SCRIPT_NAME"))
+                                                    (:nfs.net "/journal")))))))
          (*subpath-string*  (subseq *subpath-query*
                                     0
                                     (or (position #\? *subpath-query*)
