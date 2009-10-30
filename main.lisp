@@ -336,6 +336,8 @@
                   (write (let ((*xml-rpc-package*
                                 (find-package '#:mulk.journal.xml-rpc)))
                            (s-xml-rpc::handle-xml-rpc-call xml-data 0))
+                         :pretty nil
+                         :escape nil
                          :stream *standard-output*))))
     (otherwise (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
