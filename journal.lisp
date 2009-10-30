@@ -177,10 +177,14 @@
                                   ("xml:lang" "de")
                                   ("xml:base" ,(link-to :index :absolute t))))
              (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
-               (xml-as-is (if (equal (entry-type-of journal-entry) "html")
-                              (body-of journal-entry)
-                              (journal-markup->html (body-of journal-entry))))))))))
+               (xml-as-is (htmlise-entry journal-entry))))))))
   #.(restore-sql-reader-syntax-state))
+
+
+(defun htmlise-entry (journal-entry)
+  (if (equal (entry-type-of journal-entry) "html")
+      (body-of journal-entry)
+      (journal-markup->html (body-of journal-entry))))
 
 
 (defun show-atom-feed (&key include-edit-links full-content)

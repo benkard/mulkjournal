@@ -49,7 +49,7 @@
      (xml-rpc-struct :categories (mapcar #'uuid-of categories)
                      :pub-date (xml-rpc-time date)
                      :guid uuid
-                     :description body
+                     :description (htmlise-entry (find-entry postid))
                      :link (link-to :view :post-id postid :absolute t)
                      :comments (link-to :view :post-id postid :absolute t)
                      :title title)))
