@@ -330,15 +330,14 @@
     (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))
     (:xml-rpc (when (eq *method* :post)
-                (let ((xml-data (slurp-post-data)))
-                  (http-add-header "Content-Language" "de")
-                  (http-send-headers "text/xml; charset=UTF-8")
-                  (write (let ((*xml-rpc-package*
-                                (find-package '#:mulk.journal.xml-rpc)))
-                           (s-xml-rpc::handle-xml-rpc-call xml-data 0))
-                         :pretty nil
-                         :escape nil
-                         :stream *standard-output*))))
+                (http-add-header "Content-Language" "de")
+                (http-send-headers "text/xml; charset=UTF-8")
+                (write (let ((*xml-rpc-package*
+                              (find-package '#:mulk.journal.xml-rpc)))
+                         (s-xml-rpc::handle-xml-rpc-call *standard-input* 0))
+                       :pretty nil
+                       :escape nil
+                       :stream *standard-output*)))
     (otherwise (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
 
