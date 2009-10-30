@@ -54,6 +54,7 @@
                      :GUID uuid
                      :DESCRIPTION (htmlise-entry (find-entry postid))
                      :LINK (link-to :view :post-id postid :absolute t)
+                     :permaLink (link-to :view :post-id postid :absolute t)
                      :COMMENTS (link-to :view :post-id postid :absolute t)
                      :TITLE title)))
 
