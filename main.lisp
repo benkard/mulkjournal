@@ -47,7 +47,7 @@
                                       ((string= "rebuild" (car (last *subpath*))) :rebuild)
                                       ((member (car (last *subpath*)) '("rpc" "RPC2") :test #'string=) :xml-rpc)
                                       (t nil))))
-         (*query*           (if (eq *action* :view-atom-entry)
+         (*query*           (if (member *action* '(:view-atom-entry :xml-rpc))
                                 nil
                                 (mapcan #'(lambda (param)
                                             (list (keywordify param)
