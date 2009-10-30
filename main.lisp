@@ -45,7 +45,7 @@
                                       ((string= "moderate" (car (last *subpath*))) :moderate)
                                       ((string= "atom" (car (last *subpath*))) :view-atom-entry)
                                       ((string= "rebuild" (car (last *subpath*))) :rebuild)
-                                      ((string= "rpc" (car (last *subpath*))) :xml-rpc)
+                                      ((member (car (last *subpath*)) '("rpc" "RPC2") :test #'string=) :xml-rpc)
                                       (t nil))))
          (*query*           (if (eq *action* :view-atom-entry)
                                 nil
