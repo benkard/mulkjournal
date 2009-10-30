@@ -22,7 +22,10 @@
 
 (in-package #:mulk.journal)
 
-(defun mulk.journal.xml-rpc::|metaWeblog.newPost| (blogid username password struct publish)
+#.(setf *readtable* (copy-readtable))
+#.(setf (readtable-case *readtable*) :invert)
+
+(defun mulk.journal.xml-rpc::metaWeblog.newPost (blogid username password struct publish)
   (declare (ignore blogid username publish))
   (flet ((do-stuff ()
            (with-slots (categories pub-date guid description link comments title)
@@ -32,7 +35,7 @@
           (t (with-wsse-authentication () (do-stuff))))))
 
 
-(defun mulk.journal.xml-rpc::|metaWeblog.editPost| (postid username password struct publish)
+(defun mulk.journal.xml-rpc::metaWeblog.editPost (postid username password struct publish)
   (declare (ignore username publish))
   (flet ((do-stuff ()
            (with-slots (categories pub-date guid description link comments title)
@@ -42,32 +45,32 @@
           (t (with-wsse-authentication () (do-stuff))))))
 
 
-(defun mulk.journal.xml-rpc::|metaWeblog.getPost| (postid username password)
+(defun mulk.journal.xml-rpc::metaWeblog.getPost (postid username password)
   (declare (ignore username password))
   (with-slots (title date body categories last-modification id uuid)
               (find-entry postid)
-     (xml-rpc-struct :categories (mapcar #'uuid-of categories)
-                     :pub-date (xml-rpc-time date)
-                     :guid uuid
-                     :description (htmlise-entry (find-entry postid))
-                     :link (link-to :view :post-id postid :absolute t)
-                     :comments (link-to :view :post-id postid :absolute t)
-                     :title title)))
+     (xml-rpc-struct :CATEGORIES (mapcar #'uuid-of categories)
+                     :pubDate (xml-rpc-time date)
+                     :GUID uuid
+                     :DESCRIPTION (htmlise-entry (find-entry postid))
+                     :LINK (link-to :view :post-id postid :absolute t)
+                     :COMMENTS (link-to :view :post-id postid :absolute t)
+                     :TITLE title)))
 
 
-(defun mulk.journal.xml-rpc::|metaWeblog.getCategories| (blogid username password)
+(defun mulk.journal.xml-rpc::metaWeblog.getCategories (blogid username password)
   (declare (ignore blogid username password))
   (list))
 
 
-(defun mulk.journal.xml-rpc::|metaWeblog.getRecentPosts| (blogid username password number-of-posts)
+(defun mulk.journal.xml-rpc::metaWeblog.getRecentPosts (blogid username password number-of-posts)
   (declare (ignore blogid))
   (loop for post-id from (or (find-largest-post-id) 0) above (max 0 (- (or (find-largest-post-id) 0) number-of-posts))
-        collect (mulk.journal.xml-rpc::|metaWeblog.getPost| post-id username password)))
+        collect (mulk.journal.xml-rpc::metaWeblog.getPost post-id username password)))
 
-(defun mulk.journal.xml-rpc::|blogger.getUsersBlogs| (appkey username password)
+(defun mulk.journal.xml-rpc::blogger.getUsersBlogs (appkey username password)
   (declare (ignore appkey username password))
-  (list (xml-rpc-struct :blogid 0 :blogname "Kompottkins Weisheiten" :url (link-to :view :absolute t))))
+  (list (xml-rpc-struct :BLOGID 0 :blogName "Kompottkins Weisheiten" :URL (link-to :view :absolute t))))
 
 ;; Not implemented: blogger.getUserInfo blogger.setTemplate blogger.getTemplate blogger.newPost blogger.editPost
 
