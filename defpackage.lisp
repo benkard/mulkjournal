@@ -30,4 +30,4 @@
   (:nicknames #:journal-xml-rpc)
   ;; Do not :USE anything here, not even #:COMMON-LISP!
   (:use)
-  (:import-from #:s-xml-rpc-exports #:system.getCapabilities #:system.listMethods #:system.methodHelp #:system.methodSignature #:system.multicall))
+  (:import-from #:s-xml-rpc-exports #:|system.getCapabilities| #:|system.listMethods| #:|system.methodHelp| #:|system.methodSignature| #:|system.multicall|))
