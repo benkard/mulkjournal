@@ -1,0 +1,63 @@
+2006-04-19 Sven Van Caekenberghe <svc@mac.com>
+
+	* changes due to reporting and initial fixes by Alain Picard
+	* added support for whitespace handling
+	* iso8601->universal-time now accepts leading & trailing whitespace
+	* encode-xml-rpc-value now encodes t and nil correctly as boolean 1 and 0
+	* parsing doubles (using read-from-string) with reader macros disabled for security
+	* decode-xml-rpc now handles whitespace more correctly in <data> and <value> tags
+	* added several test cases and fixed older stop-server problem
+	
+2005-02-11 
+
+	* ported to clisp 2.32 (sysdeps)
+	* changed end-of-header test to accept empty lines as well
+	* changed usage to princ to write-string where possible
+	* fixed a test (added import, unintern code to/from s-xml-rpc-exports) 
+
+2005-01-22 Sven Van Caekenberghe <svc@mac.com>
+
+	* fixed a performance issue in base64 decoding
+
+2004-10-26  Rudi Schlatte  <rudi@constantly.at>
+
+	* src/sysdeps.lisp (with-open-socket-stream, run-process)
+	(start-standard-server, stop-server): Port to cmucl.
+
+2004-06-17  Rudi Schlatte  <rudi@constantly.at>
+
+	* src/package.lisp: Add system.getCapabilities.
+
+	* src/extensions.lisp: Create, move server extensions from
+	xml-rpc.lisp here.
+	(do-one-multicall): Raise standard fault codes.
+	(|system.getCapabilities|): Implement.
+	
+	* src/xml-rpc.lisp: Remove server extensions.
+	(encode-xml-rpc-value): Encode symbols as strings
+	(execute-xml-rpc-call, handle-xml-rpc-call): Raise standard fault
+	codes.
+
+2004-06-13  Rudi Schlatte  <rudi@constantly.at>
+
+	* src/xml-rpc.lisp (xml-literal): new datatype for unescaped
+	strings (used by system.multicall to pass back encoded fault structs)
+	(encode-xml-rpc-value): handle it.
+	(encode-xml-rpc-fault-value, encode-xml-rpc-fault): separate
+	encoding of fault and methodResponse for system.multicall
+	(do-one-multicall, |system.multicall|): Implement system.multicall.
+
+	* src/package.lisp (s-xml-rpc-exports): New package -- don't
+	export the whole common-lisp package by default ;)
+
+	* src/xml-rpc.lisp (*xml-rpc-package*): ... use it.
+
+	* src/xml-rpc.lisp (|system.listMethods|)
+	(|system.methodSignature|, |system.methodHelp|): Added
+	introspection methods, to be imported in *xml-rpc-package*.
+
+	* src/package.lisp (s-xml-rpc): ... export them, and also
+	|system.multicall|
+
+	* src/xml-rpc.lisp: Some indentation frobs.
+
