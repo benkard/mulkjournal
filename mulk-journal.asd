@@ -37,5 +37,6 @@
                 (:file "utils")
                 (:file "journal-content")
                 (:file "journal")
-                (:file "main"))
+                (:file "main")
+                (:file "xml-rpc-functions"))
   :serial      t)
