@@ -65,6 +65,11 @@
   (loop for post-id from (or (find-largest-post-id) 0) above (max 0 (- (or (find-largest-post-id) 0) number-of-posts))
         collect (mulk.journal.xml-rpc::|metaWeblog.getPost| post-id username password)))
 
+(defun mulk.journal.xml-rpc::|blogger.getUsersBlogs| (appkey username password)
+  (declare (ignore appkey username password))
+  (list (xml-rpc-struct :blogid 0 :blogname "Kompottkins Weisheiten" :url (link-to :view :absolute t))))
+
+;; Not implemented: blogger.getUserInfo blogger.setTemplate blogger.getTemplate blogger.newPost blogger.editPost
 
 (defun create-or-edit-post (body title &key entry-type post-id)
   (with-transaction ()
