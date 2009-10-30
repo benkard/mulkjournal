@@ -60,7 +60,7 @@
 
 (defun mulk.journal.xml-rpc::metaWeblog.getCategories (blogid username password)
   (declare (ignore blogid username password))
-  (list))
+  #())
 
 
 (defun mulk.journal.xml-rpc::metaWeblog.getRecentPosts (blogid username password number-of-posts)
