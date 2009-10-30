@@ -52,6 +52,7 @@
      (xml-rpc-struct :CATEGORIES (map 'vector #'uuid-of categories)
                      :pubDate (xml-rpc-time date)
                      :GUID uuid
+                     :POSTID id
                      :DESCRIPTION (htmlise-entry (find-entry postid))
                      :LINK (link-to :view :post-id postid :absolute t)
                      :permaLink (link-to :view :post-id postid :absolute t)
