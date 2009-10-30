@@ -55,6 +55,17 @@
                      :title title)))
 
 
+(defun mulk.journal.xml-rpc::|metaWeblog.getCategories| (blogid username password)
+  (declare (ignore blogid username password))
+  (list))
+
+
+(defun mulk.journal.xml-rpc::|metaWeblog.getRecentPosts| (blogid username password number-of-posts)
+  (declare (ignore blogid))
+  (loop for post-id from (or (find-largest-post-id) 0) above (max 0 (- (or (find-largest-post-id) 0) number-of-posts))
+        collect (mulk.journal.xml-rpc::|metaWeblog.getPost| post-id username password)))
+
+
 (defun create-or-edit-post (body title &key entry-type post-id)
   (with-transaction ()
     (let* ((entry (if post-id

@@ -279,14 +279,17 @@
   (setf (%trackbacks-about journal-entry) new-value))
 
 
-(defun make-journal-entry-id ()
+(defun find-largest-post-id ()
   #.(locally-enable-sql-reader-syntax)
   (prog1
-      (1+ (or (single-object (select [max [slot-value 'journal-entry 'id]]
-                                     :from [journal-entry]
-                                     :flatp t))
-              -1))
+    (single-object (select [max [slot-value 'journal-entry 'id]]
+                           :from [journal-entry]
+                           :flatp t))
     #.(restore-sql-reader-syntax-state)))
+
+
+(defun make-journal-entry-id ()
+  (1+ (or (find-largest-post-id) -1)))
 
 
 (defun make-journal-comment-id ()
