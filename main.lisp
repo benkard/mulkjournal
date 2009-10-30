@@ -77,9 +77,13 @@
                                                    "wordpress-api-key.key"
                                                    *data-dir*))
                               (read-line file)))
-         (*wsse-key*   (with-open-file (file (merge-pathnames
-                                              "wsse.key"
-                                              *data-dir*))
+         (*wsse-key*        (with-open-file (file (merge-pathnames
+                                                   "wsse.key"
+                                                   *data-dir*))
+                              (read-line file)))
+         (*xml-rpc-key*     (with-open-file (file (merge-pathnames
+                                                   "xml-rpc.key"
+                                                   *data-dir*))
                               (read-line file)))
          (database-file     (merge-pathnames #p"journal.sqlite3" *data-dir*))
          (sqlite-library    (merge-pathnames #p"libsqlite3.so"
@@ -299,10 +303,7 @@
                   (flet ((tag-equal (tag1 tag2)
                            (equal (if (consp tag1) (car tag1) tag1)
                                   (if (consp tag2) (car tag2) tag2))))
-                    (let* ((post-data (with-output-to-string (out)
-                                        (loop for line = (read-line *standard-input* nil nil nil)
-                                              while line
-                                              do (write-line line out))))
+                    (let* ((post-data (slurp-post-data))
                            (xml (xmls:parse post-data))
                            (entry-elements (cddr xml))
                            (content-element (find "content" entry-elements :key 'car :test #'tag-equal))
@@ -327,9 +328,23 @@
     (:view-atom-feed (show-atom-feed))
     (:view-comment-feed (show-comment-feed))
     (:view-debugging-page (show-debugging-page))
-    (otherwise       (show-web-journal)))
+    (:xml-rpc (when (eq *method* :post)
+                (let ((xml-data (slurp-post-data)))
+                  (http-add-header "Content-Language" "de")
+                  (http-send-headers "text/xml; charset=UTF-8")
+                  (write (let ((*xml-rpc-package*
+                                (find-package '#:mulk.journal.xml-rpc)))
+                           (s-xml-rpc::handle-xml-rpc-call xml-data 0))
+                         :stream *standard-output*))))
+    (otherwise (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
 
+
+(defun slurp-post-data ()
+  (with-output-to-string (out)
+    (loop for line = (read-line *standard-input* nil nil nil)
+          while line
+          do (write-line line out))))
 
 #+clisp
 (defun journal-main (&key admin-mode)

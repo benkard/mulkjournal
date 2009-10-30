@@ -26,7 +26,7 @@
   :depends-on  (#:cl-ppcre #:cl-fad #:iterate #:cl-markdown #:parenscript
                 #:yaclml #:lisp-cgi-utils #:alexandria #:xml-emitter
                 #:split-sequence #:clsql #:clsql-uffi #:clsql-sqlite3
-                #:drakma #:cybertiggyr-time)
+                #:drakma #:cybertiggyr-time #:s-xml-rpc)
   :components  ((:module "cybertiggyr-time"
                          :components ((:file "time")))
                 (:module "xmls" :components ((:file "xmls")))

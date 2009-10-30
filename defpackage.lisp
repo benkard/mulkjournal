@@ -1,5 +1,5 @@
 ;;;; -*- coding: utf-8; mode: lisp -*-
-;;;; Copyright 2007, Matthias Andreas Benkard.
+;;;; Copyright 2007-2009, Matthias Andreas Benkard.
 
 ;;;------------------------------------------------------------------------
 ;;; This file is part of The Mulkblog Project.
@@ -23,5 +23,11 @@
 (defpackage #:mulk.journal
   (:nicknames #:journal)
   (:use #:cl #:fad #:iterate #:markdown #:yaclml #:http #:alexandria
-        #:xml-emitter #:split-sequence #:clsql #:drakma)
+        #:xml-emitter #:split-sequence #:clsql #:drakma #:s-xml-rpc)
   (:shadow #:copy-file #:copy-stream #:format-date))
+
+(defpackage #:mulk.journal.xml-rpc
+  (:nicknames #:journal-xml-rpc)
+  ;; Do not :USE anything here, not even #:COMMON-LISP!
+  (:use)
+  (:import-from #:s-xml-rpc-exports #:system.getCapabilities #:system.listMethods #:system.methodHelp #:system.methodSignature #:system.multicall))
