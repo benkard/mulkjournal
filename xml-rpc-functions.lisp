@@ -37,6 +37,9 @@
 
 (defun mulk.journal.xml-rpc::metaWeblog.editPost (postid username password struct publish)
   (declare (ignore username publish))
+  (setq postid (etypecase postid
+                 (string (parse-integer postid))
+                 (number postid)))
   (flet ((do-stuff ()
            (with-slots (categories pub-date guid description link comments title)
                        struct
@@ -47,12 +50,15 @@
 
 (defun mulk.journal.xml-rpc::metaWeblog.getPost (postid username password)
   (declare (ignore username password))
+  (setq postid (etypecase postid
+                 (string (parse-integer postid))
+                 (number postid)))
   (with-slots (title date body categories last-modification id uuid)
               (find-entry postid)
      (xml-rpc-struct :CATEGORIES (map 'vector #'uuid-of categories)
                      :pubDate (xml-rpc-time date)
                      :GUID uuid
-                     :POSTID id
+                     :POSTID (format nil "~D" id)
                      :DESCRIPTION (htmlise-entry (find-entry postid))
                      :LINK (link-to :view :post-id postid :absolute t)
                      :permaLink (link-to :view :post-id postid :absolute t)
@@ -72,7 +78,7 @@
 
 (defun mulk.journal.xml-rpc::blogger.getUsersBlogs (appkey username password)
   (declare (ignore appkey username password))
-  (list (xml-rpc-struct :BLOGID 0 :blogName "Kompottkins Weisheiten" :URL (link-to :view :absolute t))))
+  (list (xml-rpc-struct :BLOGID "0" :blogName "Kompottkins Weisheiten" :URL (link-to :view :absolute t))))
 
 ;; Not implemented: blogger.getUserInfo blogger.setTemplate blogger.getTemplate blogger.newPost blogger.editPost
 
