@@ -130,8 +130,12 @@
                              :date (get-universal-time)
                              :url source-uri
                              :submitter-ip (http-getenv "REMOTE_ADDR")
-                             :submitter-user-agent (http-getenv "HTTP_USER_AGENT"))))
+                             :submitter-user-agent (http-getenv "HTTP_USER_AGENT")
+                             :spamp nil)))
             (update-records-from-instance pingback)
+            (update-records 'journal_pingback
+                            :where [= [slot-value 'journal-pingback 'id] (id-of pingback)]
+                            :av-pairs `((spam_p nil)))
             (when (eq *site* :nfs.net)
               (mail-pingback *notification-email* pingback entry))))))
     #.(restore-sql-reader-syntax-state)))
