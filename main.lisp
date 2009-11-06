@@ -155,7 +155,7 @@
                       (acceptp (getf *query* :acceptp nil))
                       (table (cond ((string= type "trackback") 'journal_trackback)
                                    ((string= type "pingback") 'journal_pingback)
-                                 'journal_comment)))
+                                   (t 'journal_comment))))
                  (with-transaction ()
                    (when (and id type acceptp (string= acceptp "t"))
                      (update-records table
