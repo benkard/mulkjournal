@@ -462,7 +462,7 @@
             :type "application/atom+xml"
             :href (link-to :view-atom-entry :absolute t)
             :title "Kompottkins Weisheiten")
-    (<:link :rel "pingback" :href (link-to :pingback :absolute t))
+    (<:as-is (format nil "<link rel=\"pingback\" href=\"~A\" />" (link-to :pingback :absolute t)))
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :css))
     (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
     (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name")
