@@ -114,7 +114,7 @@
            (entry-id (ignore-errors (parse-integer last-uri-component)))
            (entry (and entry-id (ignore-errors (find-entry entry-id)))))
       (unless entry
-        (error (make-condition 'xml-rpc-fault :code #x20)))
+        (error (make-condition 'xml-rpc-fault :code #x20 :string "Couldn't find journal entry.")))
       (with-transaction ()
         (let ((existing-pingbacks
                (select 'journal-pingback
@@ -122,7 +122,7 @@
                                    [= [slot-value 'journal-pingback 'url] source-uri]]
                        :flatp t)))
           (when existing-pingbacks
-            (error (make-condition 'xml-rpc-fault :code #x30)))
+            (error (make-condition 'xml-rpc-fault :code #x30 :string "The pingback you wanted to do was already registered.")))
           (let ((pingback (make-instance 'journal-pingback
                              :id (make-journal-pingback-id)
                              :entry-id entry-id
