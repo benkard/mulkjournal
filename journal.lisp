@@ -460,7 +460,7 @@
             :title "Kompottkins weiser Kommentarfeed")
     (<:link :rel "service.feed"
             :type "application/atom+xml"
-            :href (link-to :view-atom-entry)
+            :href (link-to :view-atom-entry :absolute t)
             :title "Kompottkins Weisheiten")
     (<:link :rel "pingback" :href (link-to :pingback :absolute t))
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :css))
