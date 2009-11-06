@@ -196,6 +196,51 @@
                          :accessor submitter-user-agent
                          :initarg :submitter-user-agent)))
 
+
+(clsql:def-view-class journal-pingback ()
+  ((id :db-kind :key
+       :type integer
+       :db-constraints :not-null
+       :accessor id-of
+       :initarg :id)
+   (entry-id :type integer
+             :db-constraints :not-null
+             :accessor entry-id-of
+             :initarg :entry-id)
+   (entry :db-kind :join
+          :db-constraints :not-null
+          :accessor entry-of
+          :initarg :entries
+          :db-info (:join-class journal-entry
+                    :home-key entry-id
+                    :foreign-key id
+                    :set nil))
+   (uuid :type (string 36)
+         :db-constraints :not-null
+         :accessor uuid-of
+         :initarg :uuid)
+   (date :type universal-time
+         :db-constraints :not-null
+         :accessor date-of
+         :initarg :date)
+   (url :type string
+        :accessor url-of
+        :initarg :url
+        :initform nil)
+   (spam-p :type boolean
+           :accessor spamp
+           :initarg :spamp
+           :initform :spamp)
+   (submitter-ip :type string
+                 :db-constraints :not-null
+                 :accessor submitter-ip
+                 :initarg :submitter-ip)
+   (submitter-user-agent :type string
+                         :db-constraints :not-null
+                         :accessor submitter-user-agent
+                         :initarg :submitter-user-agent)))
+
+
 (clsql:def-view-class journal-category ()
   ((id :db-kind :key
        :type integer
@@ -222,6 +267,8 @@
 (defgeneric (setf comments-about) (new-value thing &key ordered-p))
 (defgeneric trackbacks-about (thing &key ordered-p))
 (defgeneric (setf trackbacks-about) (new-value thing &key ordered-p))
+(defgeneric pingbacks-about (thing &key ordered-p))
+(defgeneric (setf pingbacks-about) (new-value thing &key ordered-p))
 
 (defmethod comments-about ((journal-entry journal-entry) &key ordered-p ham-p)
   #.(locally-enable-sql-reader-syntax)
@@ -279,6 +326,34 @@
   (setf (%trackbacks-about journal-entry) new-value))
 
 
+(defmethod pingbacks-about ((journal-entry journal-entry) &key ordered-p ham-p)
+  #.(locally-enable-sql-reader-syntax)
+  (prog1 (if ordered-p
+             (if ham-p
+                 (select 'journal-pingback
+                         :where [and [= [slot-value 'journal-pingback 'entry-id]
+                                        (id-of journal-entry)]
+                                     [= [slot-value 'journal-pingback 'spam-p]
+                                        "f"]]
+                         :order-by '([date])
+                         :flatp t)
+                 (select 'journal-pingback
+                         :where [= [slot-value 'journal-pingback 'entry-id]
+                                   (id-of journal-entry)]
+                         :order-by '([date])
+                         :flatp t))
+             (if ham-p
+                 (pingbacks-about journal-entry :ordered-p t :ham-p t)
+                 (%pingbacks-about journal-entry)))
+    #.(restore-sql-reader-syntax-state)))
+
+(defmethod (setf pingbacks-about) (new-value
+                                    (journal-entry journal-entry)
+                                    &key ordered-p)
+  (declare (ignore ordered-p))
+  (setf (%pingbacks-about journal-entry) new-value))
+
+
 (defun find-largest-post-id ()
   #.(locally-enable-sql-reader-syntax)
   (prog1
@@ -307,6 +382,16 @@
   (prog1
       (1+ (or (single-object (select [max [slot-value 'journal-trackback 'id]]
                                      :from [journal-trackback]
+                                     :flatp t))
+              -1))
+    #.(restore-sql-reader-syntax-state)))
+
+
+(defun make-journal-pingback-id ()
+  #.(locally-enable-sql-reader-syntax)
+  (prog1
+      (1+ (or (single-object (select [max [slot-value 'journal-pingback 'id]]
+                                     :from [journal-pingback]
                                      :flatp t))
               -1))
     #.(restore-sql-reader-syntax-state)))

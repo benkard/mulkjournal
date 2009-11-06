@@ -367,6 +367,21 @@ ELEMENT-TYPE as the stream's."
                 (spamp comment)
                 (excerpt-of comment))))
 
+(defun mail-pingback (address pingback entry)
+  (declare (type journal-pingback pingback))
+  (mail address
+        (format nil "[Pingback] ~A" (title-of entry))
+        (format nil "~&Pingback von: ~A~
+                     ~&Nummer: ~A~
+                     ~&IP-Adresse: ~A~
+                     ~&Webbrowser: ~A~
+                     ~&Als Spam erkannt: ~A"
+                (url-of pingback)
+                (id-of pingback)
+                (submitter-ip pingback)
+                (submitter-user-agent pingback)
+                (spamp pingback))))
+
 (defun revalidate-cache-or-die (content-type)
   (when (eq *mode* :http)
   #+clisp

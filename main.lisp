@@ -153,8 +153,8 @@
     (:moderate (let* ((id (getf *query* :id nil))
                       (type (getf *query* :type nil))
                       (acceptp (getf *query* :acceptp nil))
-                      (table (if (string= type "trackback")
-                                 'journal_trackback
+                      (table (cond ((string= type "trackback") 'journal_trackback)
+                                   ((string= type "pingback") 'journal_pingback)
                                  'journal_comment)))
                  (with-transaction ()
                    (when (and id type acceptp (string= acceptp "t"))

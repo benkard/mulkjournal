@@ -49,7 +49,8 @@
         (:view-atom-entry (values "/~D/atom" post-id))
         (:save (values "/~D/save" post-id))
         (:moderation-page "/moderate")
-        (:css "/../journal.css")))))
+        (:css "/../journal.css")
+        (:pingback "/rpc")))))
 
 
 (defun show-comment-feed ()
@@ -424,6 +425,7 @@
     (http-add-header "Last-Modified" (http-timestamp (compute-journal-last-modified-date)))
     (http-add-header "Content-Language" "de")
     (http-add-header "Cache-Control" "public")
+    (http-add-header "X-Pingback" (link-to :pingback :absolute t))
     (http-send-headers "text/html; charset=UTF-8"))
 
   (<xhtml :xmlns "http://www.w3.org/1999/xhtml"
@@ -460,6 +462,7 @@
             :type "application/atom+xml"
             :href (link-to :view-atom-entry)
             :title "Kompottkins Weisheiten")
+    (<:link :rel "pingback" :href (link-to :pingback :absolute t))
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :css))
     (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
     (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name")
@@ -586,6 +589,18 @@
      (<:div :class :journal-comment-body
       (<:as-html (render-comment-body excerpt))))))
 
+(defun show-pingback (pingback)
+  (with-slots (date id url)
+      pingback
+    (<:div :class :journal-comment
+           :id (format nil "pingback-~D" id)
+     (<:div :class :journal-comment-header
+      (<:as-html (format nil "(~A) "
+                         (format-date nil "%day%.%mon%.%yr%, %hr%:%min%" date)))
+      (<:as-html "Pingback von ")
+      (<:a :href url :rel "nofollow" (<:as-html url))
+      (<:as-html ".")))))
+
 (defun show-moderation-page ()
   #.(locally-enable-sql-reader-syntax)
   (revalidate-cache-or-die "text/html; charset=UTF-8")
@@ -613,6 +628,29 @@
         (<:button :type "submit" (<:as-is "Annehmen")))
       (<:div (<:as-html "Zu: ") (<:a :href (link-to :view :post-id (id-of (entry-of trackback)) :absolute t) (<:as-html (title-of (entry-of trackback)))))
       (show-trackback trackback))
+    (<:h2 (<:as-html "Pingbacks"))
+    (dolist (pingback (select 'journal-pingback :flatp t :order-by '([date]) :where (clsql:sql-null [spam_p])))
+      (<:hr)
+      (<:form :action (link-to :moderation-page)
+              :method "post"
+              :accept-charset "UTF-8"
+              :enctype "application/x-www-form-urlencoded"
+              :style "display: inline"
+        (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of pingback)))
+        (<:input :type "hidden" :name "type" :value "pingback")
+        (<:input :type "hidden" :name "acceptp" :value "f")
+        (<:button :type "submit" (<:as-is "Verwerfen")))
+      (<:form :action (link-to :moderation-page)
+              :method "post"
+              :accept-charset "UTF-8"
+              :enctype "application/x-www-form-urlencoded"
+              :style "display: inline"
+        (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of pingback)))
+        (<:input :type "hidden" :name "type" :value "pingback")
+        (<:input :type "hidden" :name "acceptp" :value "t")
+        (<:button :type "submit" (<:as-is "Annehmen")))
+      (<:div (<:as-html "Zu: ") (<:a :href (link-to :view :post-id (id-of (entry-of pingback)) :absolute t) (<:as-html (title-of (entry-of pingback)))))
+      (show-pingback pingback))
     (<:h2 (<:as-html "Kommentare"))
     (dolist (comment (select 'journal-comment :flatp t :order-by '([date]) :where (clsql:sql-null [spam_p])))
       (<:hr)

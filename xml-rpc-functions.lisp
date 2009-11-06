@@ -105,3 +105,33 @@
       (update-records-from-instance entry)
       ;; Update static files.
       (update-journal))))
+
+
+(defun mulk.journal.xml-rpc::|pingback.ping| (source-uri target-uri)
+  #.(locally-enable-sql-reader-syntax)
+  (prog1
+    (let* ((last-uri-component (first (split-sequence #\/ target-uri :from-end t :count 1)))
+           (entry-id (ignore-errors (parse-integer last-uri-component)))
+           (entry (and entry-id (ignore-errors (find-entry entry-id)))))
+      (unless entry
+        (error (make-condition 'xml-rpc-fault :code #x20)))
+      (with-transaction ()
+        (let ((existing-pingbacks
+               (select 'journal-pingback
+                       :where [and [= [slot-value 'journal-pingback 'entry-id] entry-id]
+                                   [= [slot-value 'journal-pingback 'url] source-uri]]
+                       :flatp t)))
+          (when existing-pingbacks
+            (error (make-condition 'xml-rpc-fault :code #x30)))
+          (let ((pingback (make-instance 'journal-pingback
+                             :id (make-journal-pingback-id)
+                             :entry-id entry-id
+                             :uuid (make-uuid)
+                             :date (get-universal-time)
+                             :url source-uri
+                             :submitter-ip (http-getenv "REMOTE_ADDR")
+                             :submitter-user-agent (http-getenv "HTTP_USER_AGENT"))))
+            (update-records-from-instance pingback)
+            (when (eq *site* :nfs.net)
+              (mail-pingback *notification-email* pingback entry))))))
+    #.(restore-sql-reader-syntax-state)))
