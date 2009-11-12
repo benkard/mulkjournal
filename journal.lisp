@@ -765,7 +765,7 @@
 (defun show-site-map ()
   #.(locally-enable-sql-reader-syntax)
   (with-xml-output (*standard-output* :encoding "utf-8")
-    (with-tag ("sitemap" '(("xmlns" "http://www.sitemaps.org/schemas/sitemap/0.9")))
+    (with-tag ("urlset" '(("xmlns" "http://www.sitemaps.org/schemas/sitemap/0.9")))
       (with-tag ("url")
         (emit-simple-tags :loc (link-to :index :absolute t)
                           :priority "0.5"))
