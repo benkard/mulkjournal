@@ -763,6 +763,7 @@
                  (<:pre (<:as-html (prin1-to-string y))))))))
 
 (defun show-site-map ()
+  #.(locally-enable-sql-reader-syntax)
   (with-xml-output (*standard-output* :encoding "utf-8")
     (with-tag ("sitemap" '(("xmlns" "http://www.sitemaps.org/schemas/sitemap/0.9")))
       (with-tag ("url")
@@ -776,7 +777,8 @@
                           :flatp t))
         (with-tag ("url")
           (emit-simple-tags :loc (link-to :view :post-id id)
-                            :priority "0.7"))))))
+                            :priority "0.7")))))
+  #.(restore-sql-reader-syntax-state))
 
 (defun update-journal ()
   (format t "~&Updating index page...")
