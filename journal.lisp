@@ -767,16 +767,16 @@
   (with-xml-output (*standard-output* :encoding "utf-8")
     (with-tag ("sitemap" '(("xmlns" "http://www.sitemaps.org/schemas/sitemap/0.9")))
       (with-tag ("url")
-        (emit-simple-tags :loc (link-to :index)
+        (emit-simple-tags :loc (link-to :index :absolute t)
                           :priority "0.5"))
       (with-tag ("url")
-        (emit-simple-tags :loc (link-to :full-index)
+        (emit-simple-tags :loc (link-to :full-index :absolute t)
                           :priority "0.3"))
       (dolist (id (select [slot-value 'journal-entry 'id]
                           :from [journal-entry]
                           :flatp t))
         (with-tag ("url")
-          (emit-simple-tags :loc (link-to :view :post-id id)
+          (emit-simple-tags :loc (link-to :view :post-id id :absolute t)
                             :priority "0.7")))))
   #.(restore-sql-reader-syntax-state))
 
