@@ -48,6 +48,7 @@
                                       ((string= "moderate" (car (last *subpath*))) :moderate)
                                       ((string= "atom" (car (last *subpath*))) :view-atom-entry)
                                       ((string= "rebuild" (car (last *subpath*))) :rebuild)
+                                      ((string= "sitemap" (car (last *subpath*))) :sitemap)
                                       ((member (car (last *subpath*)) '("rpc" "RPC2") :test #'string=) :xml-rpc)
                                       (t nil))))
          (*query*           (if (member *action* '(:view-atom-entry :xml-rpc))
@@ -148,7 +149,8 @@
                      ;; Update static files.
                      (update-index-page)
                      (update-journal-entry-page entry)
-                     (update-atom-feed)))
+                     (update-atom-feed)
+                     (update-site-map)))
                  (show-web-journal))
     (:moderate (let* ((id (getf *query* :id nil))
                       (type (getf *query* :type nil))
@@ -342,6 +344,7 @@
                        :pretty nil
                        :escape nil
                        :stream *standard-output*)))
+    (:sitemap (show-site-map))
     (otherwise (show-web-journal)))
   #.(restore-sql-reader-syntax-state))
 

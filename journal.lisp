@@ -762,6 +762,22 @@
                  (<:p "Type " (<:em (<:as-html (type-of y))) ".")
                  (<:pre (<:as-html (prin1-to-string y))))))))
 
+(defun show-site-map ()
+  (with-xml-output (*standard-output* :encoding "utf-8")
+    (with-tag ("sitemap" '(("xmlns" "http://www.sitemaps.org/schemas/sitemap/0.9")))
+      (with-tag ("url")
+        (emit-simple-tags :loc (link-to :index)
+                          :priority "0.5"))
+      (with-tag ("url")
+        (emit-simple-tags :loc (link-to :full-index)
+                          :priority "0.3"))
+      (dolist (id (select [slot-value 'journal-entry 'id]
+                          :from [journal-entry]
+                          :flatp t))
+        (with-tag ("url")
+          (emit-simple-tags :loc (link-to :view :post-id id)
+                            :priority "0.7"))))))
+
 (defun update-journal ()
   (format t "~&Updating index page...")
   (update-index-page)
@@ -769,7 +785,9 @@
   (update-all-journal-entry-pages)
   (format t "~&Updating the news feeds...")
   (update-atom-feed)
-  (update-comment-feed))
+  (update-comment-feed)
+  (format t "~&Updating the site map...")
+  (update-site-map))
 
 (defun update-index-page ()
   (let ((file-path (merge-pathnames "index.xhtml" *static-dir*)))
@@ -806,3 +824,9 @@
     (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
       (let ((*mode* :file))
         (show-comment-feed)))))
+
+(defun update-site-map ()
+  (let ((file-path (merge-pathnames "sitemap.xml" *static-dir*)))
+    (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
+      (let ((*mode* :file))
+        (show-site-map)))))
