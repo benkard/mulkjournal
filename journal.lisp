@@ -286,10 +286,10 @@
      (<:td (<:a :href (link-to :view :post-id id)
             (<:as-is title)))
      (<:td :style "text-align: right"
-      (<:as-is (format-date nil "%day%.%mon%.%yr%,&nbsp;%hr%:%2min%" posting-date)))
+      (<:as-is (format-date nil "%day%.%mon%.%yr%,&#160;%hr%:%2min%" posting-date)))
      (<:td (<:a :href (link-to :view :post-id id)
             (<:as-is
-             (format nil "~D&nbsp;Kommentar~:*~[e~;~:;e~]" (length comments)))))))
+             (format nil "~D&#160;Kommentar~:*~[e~;~:;e~]" (length comments)))))))
 
   (when *full-entry-view*
     (<:div :class :journal-entry
@@ -321,7 +321,7 @@
                   :name "id"
                   :value (prin1-to-string id))
          (<:button :type "submit"
-                   (<:as-is "L&ouml;schen"))))
+                   (<:as-is "L&#246;schen"))))
        " | "
        (<:form :class :journal-entry-edit-button-form
                :style "display: inline;"
@@ -364,17 +364,17 @@
 -->" (link-to :view :post-id id :absolute t) (ppcre:regex-replace "--" title "&#8212;") (link-to :trackback :post-id id :absolute t)))
       (<:div :class :journal-new-comment
        (<:h2 "Neuen Kommentar schreiben")
-       (<:p (<:as-is "Bitte beachten Sie, da&szlig; E-Mail-Adressen niemals
-                      ver&ouml;ffentlicht werden und nur von Matthias eingesehen
-                      werden k&ouml;nnen."))
+       (<:p (<:as-is "Bitte beachten Sie, da&#223; E-Mail-Adressen niemals
+                      ver&#246;ffentlicht werden und nur von Matthias eingesehen
+                      werden k&#246;nnen."))
        (<:p (<:strong "Hinweise: ")
             "Diese Website verwendet "
             (<:a :href "http://akismet.com/" "Akismet")
             " zur Spamerkennung. "
-            (<:as-is "E-Mail-Adressen werden auch gegen&uuml;ber Akismet
-                      unter Verschlu&szlig; gehalten.  Nur unformatierter
+            (<:as-is "E-Mail-Adressen werden auch gegen&#252;ber Akismet
+                      unter Verschlu&#223; gehalten.  Nur unformatierter
                       Text ist erlaubt.  Leerzeilen trennen
-                      Abs&auml;tze."))
+                      Abs&#228;tze."))
        (<:form :action (link-to :view :post-id id)
                :method "post"
                :accept-charset #+(or) "ISO-10646-UTF-1"
@@ -389,7 +389,7 @@
                   :name "action"
                   :value "post-comment"))
         (<:div :style "display: table"
-         (loop for (name . desc) in '(("author" . "Name (n&ouml;tig)")
+         (loop for (name . desc) in '(("author" . "Name (n&#246;tig)")
                                       ("email" . "E-Mail")
                                       ("website" . "Website"))
                do (<:div :style "display: table-row"
@@ -413,7 +413,7 @@
                        :cols 40))))
         (<:div
          (<:button :type "submit"
-          (<:as-is "Ver&ouml;ffentlichen"))))))))
+          (<:as-is "Ver&#246;ffentlichen"))))))))
 
 
 (defun call-with-web-journal (page-title thunk &key canonical-uri)
@@ -482,8 +482,8 @@
       (<:as-is "&#8226;&#8226;&#8226; ")
       (<:as-is
        (random-elt
-        '("Geschwafel eines libert&auml;rsozialistischen Geeks"
-          "NEU!  Jetzt ohne regelm&auml;&szlig;ige Serverabst&uuml;rze!"
+        '("Geschwafel eines libert&#228;rsozialistischen Geeks"
+          "NEU!  Jetzt ohne regelm&#228;&#223;ige Serverabst&#252;rze!"
           "NEU!  Jetzt mit mehr als 3 % Uptime!")))
       (<:as-is " &#8226;&#8226;&#8226;")))
     (when (and *journal-warnings* (eq *mode* :http))
@@ -542,12 +542,12 @@
              (show-journal-entry entry)))
          (unless full-journal-view
            (<:div :class :old-entries
-            (<:h2 (<:as-is "&Auml;ltere Eintr&auml;ge"))
+            (<:h2 (<:as-is "&#196;ltere Eintr&#228;ge"))
             (<:p
              (<:a :href (link-to :full-index)
-              (<:as-is "Alle Eintr&auml;ge vollst&auml;ndig anzeigen (langsam!).")))
+              (<:as-is "Alle Eintr&#228;ge vollst&#228;ndig anzeigen (langsam!).")))
             (<:table :class :old-entry-table
-             (<:caption (<:as-is "Eintr&auml;ge nach Datum"))
+             (<:caption (<:as-is "Eintr&#228;ge nach Datum"))
              (<:thead
               (<:tr
                (<:th (<:as-is "Titel"))
@@ -699,7 +699,7 @@
                :value body)
       (<:div
        (<:button :type "submit"
-        (<:as-is "Ver&ouml;ffentlichen"))))
+        (<:as-is "Ver&#246;ffentlichen"))))
     (show-journal-entry-with-components (or id -1)
                                         title
                                         body
@@ -724,7 +724,7 @@
         (<:div :style "display: table-cell; vertical-align: top"
          (<:label :for "entry-title-editor"
                   :style "vertical-align: top"
-          (<:as-is "&Uuml;berschrift: ")))
+          (<:as-is "&#220;berschrift: ")))
         (<:div :style "display: table-cell;"
          (<:input :type "text"
                   :name "title"

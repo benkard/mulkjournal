@@ -209,24 +209,24 @@
                            (when spam-p
                              (push (format nil
                                     "<p>Ihr Kommentar wurde als ~
-                                     m&ouml;gliche unerw&uuml;nschte ~
+                                     m&#246;gliche unerw&#252;nschte ~
                                      Werbung (Spam) klassifiert.  Der ~
                                      Inhaber dieses Journals wird Ihre ~
                                      Nachricht manuell moderieren ~
-                                     m&uuml;ssen, weshalb eine ~
-                                     Ver&ouml;ffentlichung noch etwas ~
+                                     m&#252;ssen, weshalb eine ~
+                                     Ver&#246;ffentlichung noch etwas ~
                                      auf sich warten lassen kann.</p> ~
                                      ~
                                      <p>Wenn Sie ganz sichergehen ~
-                                     wollen, da&szlig; Ihr Beitrag ~
-                                     ver&ouml;ffentlicht wird, dann ~
-                                     k&ouml;nnen Sie versuchen, ihn ~
-                                     abzu&auml;ndern und erneut ~
+                                     wollen, da&#223; Ihr Beitrag ~
+                                     ver&#246;ffentlicht wird, dann ~
+                                     k&#246;nnen Sie versuchen, ihn ~
+                                     abzu&#228;ndern und erneut ~
                                      einzuschicken.</p>~
                                      ~
                                      <p>Hinweis: Diese Website verwendet ~
                                      <a href=\"http://akismet.com/\">Akismet</a> ~
-                                     f&uuml;r die Spamerkennung.</p>")
+                                     f&#252;r die Spamerkennung.</p>")
                                      *journal-warnings*))
                            (unless spam-p
                              (push (format nil
