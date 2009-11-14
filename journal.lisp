@@ -436,8 +436,13 @@
     ;; derived from the code alone by HTML parsers.  (It can be by XML
     ;; parses because of the XML preamble.)  This would make saving the
     ;; page on a disk inconvenient.
-    (<:meta :http-equiv "Content-Type"
-            :content "text/html; charset=UTF-8")
+    ;;
+    ;; Also, it's non-conforming for XHTML documents other than XHTML
+    ;; 1.0.
+    ;;
+    ;;(<:meta :http-equiv "Content-Type"
+    ;;        :content "text/html; charset=UTF-8")
+
     ;; The iPhone's Mobile Safari browser scales all web pages by
     ;; default in order to make them look as if on a PC-sized monitor.
     ;; That's great for all those flashy web sites out there that aren't
@@ -474,13 +479,13 @@
            (<:a :href (link-to :index)
                 "Kompottkins Weisheiten"))
      (<:div :id :main-subtitle
-      (<:as-is "&bull;&bull;&bull; ")
+      (<:as-is "&#8226;&#8226;&#8226; ")
       (<:as-is
        (random-elt
         '("Geschwafel eines libert&auml;rsozialistischen Geeks"
           "NEU!  Jetzt ohne regelm&auml;&szlig;ige Serverabst&uuml;rze!"
           "NEU!  Jetzt mit mehr als 3 % Uptime!")))
-      (<:as-is " &bull;&bull;&bull;")))
+      (<:as-is " &#8226;&#8226;&#8226;")))
     (when (and *journal-warnings* (eq *mode* :http))
       (<:div :id :warnings
        (dolist (warning *journal-warnings*)
