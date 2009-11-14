@@ -49,7 +49,7 @@
         (:view-atom-entry (values "/~D/atom" post-id))
         (:save (values "/~D/save" post-id))
         (:moderation-page "/moderate")
-        (:css "/../journal.css")
+        (:css "/journal.css")
         (:pingback "/rpc")))))
 
 
