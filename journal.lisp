@@ -548,7 +548,7 @@
            (<:div :class :old-entries
             (<:h2 (<:as-is "&#196;ltere Eintr&#228;ge"))
             (<:p
-             (<:a :href (link-to :full-index)
+             (<:a :rel "archives" :href (link-to :full-index)
               (<:as-is "Alle Eintr&#228;ge vollst&#228;ndig anzeigen (langsam!).")))
             (<:table :class :old-entry-table
              (<:caption (<:as-is "Eintr&#228;ge nach Datum"))
