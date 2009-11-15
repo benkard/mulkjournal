@@ -442,6 +442,10 @@
     ;;
     ;;(<:meta :http-equiv "Content-Type"
     ;;        :content "text/html; charset=UTF-8")
+    ;;
+    ;; The following, on the other hand, is the official HTML 5 variant
+    ;; of the above.
+    (<:as-is "<meta charset=\"utf-8\" />")
 
     ;; The iPhone's Mobile Safari browser scales all web pages by
     ;; default in order to make them look as if on a PC-sized monitor.
