@@ -47,7 +47,7 @@
   text-align: left;
 }
 
-div.JOURNAL-ENTRY > h2 {
+.JOURNAL-ENTRY > h2 {
   border-bottom: 2px solid #000;
   /* font-variant: small-caps; */
 }
@@ -56,7 +56,7 @@ div.JOURNAL-ENTRY > h2 {
   text-decoration: none;
 }
 
-div.JOURNAL-ENTRY {
+.JOURNAL-ENTRY {
   border: 3px outset #666;
   color: #000;
   background-color: #f8f8e0;
@@ -65,7 +65,7 @@ div.JOURNAL-ENTRY {
   text-align: justify;
 }
 
-div.JOURNAL-ENTRY-BODY p {
+.JOURNAL-ENTRY-BODY p {
   text-indent: 1em;
 }
 
@@ -126,7 +126,7 @@ img.JOURNAL-ENTRY-PORTRAIT {
   text-align: justify;
 }
 
-div.OLD-ENTRIES {
+.OLD-ENTRIES {
   border: 3px outset #666;
   color: #000;
   background-color: #e8e8e8;
