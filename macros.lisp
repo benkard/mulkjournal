@@ -40,6 +40,11 @@
   (emit-body body)
   (emit-close-tag "html"))
 
+(yaclml::def-html-tag <article :core :i18n :event)
+(yaclml::def-html-tag <header :core :i18n :event)
+(yaclml::def-html-tag <footer :core :i18n :event)
+(yaclml::def-html-tag <time :core :i18n :event pubdate datetime)
+
 
 (defmacro with-web-journal ((page-title &key canonical-uri) &body body)
   `(call-with-web-journal ,page-title #'(lambda () ,@body) :canonical-uri ,canonical-uri))

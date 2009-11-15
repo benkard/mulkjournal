@@ -301,11 +301,15 @@
              (format nil "~D&#160;Kommentar~:*~[e~;~:;e~]" (length comments)))))))
 
   (when *full-entry-view*
-    (<:div :class :journal-entry
-     (<:h2 (<:a :href (link-to :view :post-id id)
+    (<article :class :journal-entry
+     (<:h1 (<:a :href (link-to :view :post-id id)
             (<:as-is title)))
-     (<:div :class :journal-entry-header
-      (<:span :class :journal-entry-date
+     (<header :class :journal-entry-header
+      (<time :class :journal-entry-date
+             :pubdate "pubdate"
+             :datetime (format-date nil
+                                    "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
+                                    posting-date)
        (<:as-html
         (format-date nil "%@day-of-week%, den %day%.%mon%.%yr%, %hr%:%2min%."
                      posting-date)))
@@ -317,7 +321,7 @@
        (<:as-is (if (equal type "html")
                     body
                     (journal-markup->html body))))
-      (<:div :class :journal-entry-footer
+      (<footer :class :journal-entry-footer
        (<:form :class :journal-entry-delete-button-form
                :style "display: inline;"
                :method "post"
