@@ -157,7 +157,13 @@
                       (acceptp (getf *query* :acceptp nil))
                       (table (cond ((string= type "trackback") 'journal_trackback)
                                    ((string= type "pingback") 'journal_pingback)
-                                   (t 'journal_comment))))
+                                   (t 'journal_comment)))
+                      (class (intern (map 'string (lambda (c)
+                                                    (case c
+                                                      (#\_ #\-)
+                                                      (otherwise c)))
+                                          (symbol-name table))
+                                     (find-package "MULK.JOURNAL"))))
                  (with-transaction ()
                    (when (and id type acceptp (string= acceptp "t"))
                      (update-records table
@@ -166,7 +172,7 @@
                      ;; Update static files.
                      (update-index-page)
                      (update-comment-feed)
-                     (let ((comment/trackback (single-object (select table
+                     (let ((comment/trackback (single-object (select class
                                                                      :where [= [id] id]
                                                                      :flatp t))))
                        (update-journal-entry-page (entry-of comment/trackback))))
