@@ -28,9 +28,11 @@
 (defun mulk.journal.xml-rpc::metaWeblog.newPost (blogid username password struct publish)
   (declare (ignore blogid username publish))
   (flet ((do-stuff ()
-           (with-slots (categories pub-date guid description link comments title)
-                       struct
-              (create-or-edit-post description title))))
+           (let ((props (xml-rpc-struct-alist struct)))
+             (assert (cdr (assoc :DESCRIPTION props)))
+             (assert (cdr (assoc :TITLE props)))
+             (create-or-edit-post (cdr (assoc :DESCRIPTION props))
+                                  (cdr (assoc :TITLE props))))))
     (cond ((string= password *xml-rpc-key*) (do-stuff))
           (t (with-wsse-authentication () (do-stuff))))))
 
@@ -41,11 +43,28 @@
                  (string (parse-integer postid))
                  (number postid)))
   (flet ((do-stuff ()
-           (with-slots (categories pub-date guid description link comments title)
-                       struct
-              (create-or-edit-post description title :post-id postid))))
+           (let ((props (xml-rpc-struct-alist struct)))
+             (assert (cdr (assoc :DESCRIPTION props)))
+             (assert (cdr (assoc :TITLE props)))
+             (create-or-edit-post (cdr (assoc :DESCRIPTION props))
+                                  (cdr (assoc :TITLE props))
+                                  :post-id postid))))
     (cond ((string= password *xml-rpc-key*) (do-stuff))
           (t (with-wsse-authentication () (do-stuff))))))
+
+
+(defun convert-entry-to-rss-item (entry)
+  (with-slots (title date body categories last-modification id uuid)
+              entry
+     (xml-rpc-struct :CATEGORIES (map 'vector #'uuid-of categories)
+                     :pubDate (xml-rpc-time date)
+                     :GUID uuid
+                     :POSTID (format nil "~D" id)
+                     :DESCRIPTION (htmlise-entry entry)
+                     :LINK (link-to :view :post-id id :absolute t)
+                     :permaLink (link-to :view :post-id id :absolute t)
+                     :COMMENTS (link-to :view :post-id id :absolute t)
+                     :TITLE title)))
 
 
 (defun mulk.journal.xml-rpc::metaWeblog.getPost (postid username password)
@@ -53,17 +72,7 @@
   (setq postid (etypecase postid
                  (string (parse-integer postid))
                  (number postid)))
-  (with-slots (title date body categories last-modification id uuid)
-              (find-entry postid)
-     (xml-rpc-struct :CATEGORIES (map 'vector #'uuid-of categories)
-                     :pubDate (xml-rpc-time date)
-                     :GUID uuid
-                     :POSTID (format nil "~D" id)
-                     :DESCRIPTION (htmlise-entry (find-entry postid))
-                     :LINK (link-to :view :post-id postid :absolute t)
-                     :permaLink (link-to :view :post-id postid :absolute t)
-                     :COMMENTS (link-to :view :post-id postid :absolute t)
-                     :TITLE title)))
+  (convert-entry-to-rss-item (find-entry postid)))
 
 
 (defun mulk.journal.xml-rpc::metaWeblog.getCategories (blogid username password)
@@ -104,7 +113,8 @@
       (setf (entry-type-of entry) (or entry-type "html"))
       (update-records-from-instance entry)
       ;; Update static files.
-      (update-journal))))
+      (update-journal)
+      (convert-entry-to-rss-item entry))))
 
 
 (defun mulk.journal.xml-rpc::|pingback.ping| (source-uri target-uri)
