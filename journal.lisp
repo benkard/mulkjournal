@@ -50,6 +50,8 @@
         (:save (values "/~D/save" post-id))
         (:moderation-page "/moderate")
         (:css "/journal.css")
+        (:prettify.css "/prettify/prettify.css")
+        (:prettify.js "/prettify/prettify.js")
         (:pingback "/rpc")))))
 
 
@@ -477,6 +479,9 @@
     (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name")
     (when canonical-uri
       (<:link :rel "canonical" :type "text/html" :href canonical-uri)))
+    ;; Google Code Prettifier.
+    (<:link :rel "stylesheet" :type "text/css" :href (link-to :prettify.css))
+    (<:script :type "text/javascript" :src (link-to :prettify.js))
    (<:body
     (<:div :id :main-title-box
      (<:h1 :id :main-title
