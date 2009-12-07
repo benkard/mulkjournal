@@ -484,7 +484,7 @@
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :prettify.css))
     (<:script :type "text/javascript" :src (link-to :prettify.js))
     (<:script :type "text/javascript" :src (link-to :prettify-lisp.js))
-   (<:body
+   (<:body :onload "prettyPrint()"
     (<:div :id :main-title-box
      (<:h1 :id :main-title
            (<:a :href (link-to :index)
