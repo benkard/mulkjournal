@@ -52,6 +52,7 @@
         (:css "/journal.css")
         (:prettify.css "/prettify/prettify.css")
         (:prettify.js "/prettify/prettify.js")
+        (:prettify-lisp.js "/prettify/lang-lisp.js")
         (:pingback "/rpc")))))
 
 
@@ -482,6 +483,7 @@
     ;; Google Code Prettifier.
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :prettify.css))
     (<:script :type "text/javascript" :src (link-to :prettify.js))
+    (<:script :type "text/javascript" :src (link-to :prettify-lisp.js))
    (<:body
     (<:div :id :main-title-box
      (<:h1 :id :main-title
