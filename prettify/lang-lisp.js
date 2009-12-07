@@ -77,7 +77,7 @@ PR.registerLangHandler(
          [PR.PR_STRING,      /^\"(?:[^\"\\]|\\[\s\S])*(?:\"|$)/, null, '"']
         ],
         [
-         [PR.PR_KEYWORD,     /^(?:block|c[ad]+r|catch|cons|defun|do|eq|eql|equal|equalp|eval-when|flet|format|go|if|labels|lambda|let|load-time-value|locally|macrolet|multiple-value-call|nil|progn|progv|quote|require|return-from|setq|symbol-macrolet|t|tagbody|the|throw|unwind|loop|with--*(?:[a-z_]|\\[\x21-\x7e])(?:[\w-]*|\\[\x21-\x7e])[=!?]?\b|define--*(?:[a-z_]|\\[\x21-\x7e])(?:[\w-]*|\\[\x21-\x7e])[=!?]?\b|for|in|from|to|fn|defn|def)/, null],
+         [PR.PR_KEYWORD,     /^(?:block|c[ad]+r|catch|cons|defun|do|eq|eql|equal|equalp|eval-when|flet|format|go|if|labels|lambda|let|load-time-value|locally|macrolet|multiple-value-call|nil|progn|progv|quote|require|return-from|setq|symbol-macrolet|t|tagbody|the|throw|unwind|loop|with--*(?:[a-z_]|\\[\x21-\x7e])(?:[\w-]*|\\[\x21-\x7e])[=!?]?|define--*(?:[a-z_]|\\[\x21-\x7e])(?:[\w-]*|\\[\x21-\x7e])[=!?]?|for|in|from|to|fn|defn|def)\b/, null],
          [PR.PR_LITERAL,
           /^[+\-]?(?:0x[0-9a-f]+|\d+\/\d+|(?:\.\d+|\d+(?:\.\d*)?)(?:[ed][+\-]?\d+)?)/i],
          // A single quote or a colon possibly followed by a word that optionally ends with
