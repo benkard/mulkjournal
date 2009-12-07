@@ -82,7 +82,11 @@
 
 (defun mulk.journal.xml-rpc::metaWeblog.getRecentPosts (blogid username password number-of-posts)
   (declare (ignore blogid))
-  (loop for post-id from (or (find-largest-post-id) 0) above (max -1 (- (or (find-largest-post-id) 0) number-of-posts))
+  (loop for post-id from (max 0
+                              (+ (- (or (find-largest-post-id) 0)
+                                    number-of-posts)
+                                 1))
+                    to (or (find-largest-post-id) -1)
         collect (mulk.journal.xml-rpc::metaWeblog.getPost post-id username password)))
 
 (defun mulk.journal.xml-rpc::blogger.getUsersBlogs (appkey username password)
