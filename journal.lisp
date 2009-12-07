@@ -479,11 +479,11 @@
     (<:link :rel "openid.server" :href "https://meinguter.name/index.php/serve")
     (<:link :rel "openid.delegate" :href "https://matthias.benkard.meinguter.name")
     (when canonical-uri
-      (<:link :rel "canonical" :type "text/html" :href canonical-uri)))
+      (<:link :rel "canonical" :type "text/html" :href canonical-uri))
     ;; Google Code Prettifier.
     (<:link :rel "stylesheet" :type "text/css" :href (link-to :prettify.css))
     (<:script :type "text/javascript" :src (link-to :prettify.js))
-    (<:script :type "text/javascript" :src (link-to :prettify-lisp.js))
+    (<:script :type "text/javascript" :src (link-to :prettify-lisp.js)))
    (<:body :onload "prettyPrint()"
     (<:div :id :main-title-box
      (<:h1 :id :main-title
