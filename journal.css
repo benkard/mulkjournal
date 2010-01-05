@@ -1,3 +1,4 @@
+/*-*- mode: css; coding: utf-8 -*-*/
 /* CSS version 3.0 */
 /* Copyright 2007, 2008, Matthias Andreas Benkard. */
 
@@ -67,6 +68,11 @@
 
 .JOURNAL-ENTRY-BODY p {
   text-indent: 1em;
+}
+
+.JOURNAL-ENTRY-BODY pre {
+  overflow: auto;
+  /* overflow: scroll; */
 }
 
 .JOURNAL-ENTRY-BODY blockquote {
