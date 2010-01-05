@@ -147,3 +147,11 @@ table.OLD-ENTRY-TABLE td {
   border: 1px solid #aaa;
   margin: 0 0 0 0;
 }
+
+a:link {
+  color: #0c2db2;
+}
+
+a:visited {
+  color: #38597f;
+}
