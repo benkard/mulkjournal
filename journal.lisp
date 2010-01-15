@@ -39,7 +39,8 @@
         (:index "")
         (:full-index "/?full")
         (:view-atom-feed (values "/feed"))
-        (:view-comment-feed (values "/comment-feed"))
+        (:view-comment-feed (cond (post-id (values "/comment-feed/~D" post-id))
+                                  (t "/comment-feed")))
         (:view (cond (comment-id (values "/~D#comment-~D" post-id comment-id))
                      (post-id (values "/~D" post-id))
                      (t "/")))
@@ -103,7 +104,9 @@
                                            :flatp t))
             (with-slots (entry uuid date body author website spam-p id)
                         journal-comment
-               (unless spam-p
+               (when (and (not spam-p)
+                          (or (not *post-number*)
+                              (= (id-of entry) *post-number*)))
                  (incf number)
                  (with-tag ("entry")
                    (emit-simple-tags :title (format nil "Kommentar zu: ~A" (title-of entry))
@@ -336,6 +339,10 @@
                   :value (prin1-to-string id))
          (<:button :type "submit"
                    (<:as-is "Bearbeiten"))))
+       " | "
+       (<:a :href (link-to :view-atom-feed :post-id id)
+        (<:as-is
+         (format nil "Kommentarfeed (Atom)" (length comments))))
        " | "
        (<:a :href (link-to :view :post-id id)
         (<:as-is
