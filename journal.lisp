@@ -860,7 +860,7 @@
 
 (defun update-comment-feed-for-entry (entry-id)
   (let* ((file-name "comment-feed.xml")
-         (directory (merge-pathnames (make-pathname :directory (list :relative (format nil "~D" id))) *static-dir*))
+         (directory (merge-pathnames (make-pathname :directory (list :relative (format nil "~D" entry-id))) *static-dir*))
          (file-path (merge-pathnames file-name directory)))
     (ensure-directories-exist file-path)
     (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
