@@ -856,7 +856,7 @@
 
 (defun update-comment-feeds-for-entries ()
   (dotimes (entry-id (+ (find-largest-post-id) 1))
-    (update-comment-feed-for-entry entryid)))
+    (update-comment-feed-for-entry entry-id)))
 
 (defun update-comment-feed-for-entry (entry-id)
   (let* ((file-name "comment-feed.xml")
