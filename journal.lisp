@@ -833,7 +833,7 @@
 (defun update-journal-entry-page (entry)
   (with-slots (id title) entry
      (let* ((file-name "index.xhtml")
-            (directory (merge-pathnames (make-pathname :directory (format nil "~D" id)) *static-dir*))
+            (directory (merge-pathnames (make-pathname :directory (list :relative (format nil "~D" id))) *static-dir*))
             (file-path (merge-pathnames file-name directory)))
        (ensure-directories-exist file-path)
        (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
@@ -860,7 +860,7 @@
 
 (defun update-comment-feed-for-entry (entry-id)
   (let* ((file-name "comment-feed.xml")
-         (directory (merge-pathnames (make-pathname :directory (format nil "~D" id)) *static-dir*))
+         (directory (merge-pathnames (make-pathname :directory (list :relative (format nil "~D" id))) *static-dir*))
          (file-path (merge-pathnames file-name directory)))
     (ensure-directories-exist file-path)
     (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
