@@ -39,7 +39,7 @@
         (:index "")
         (:full-index "/?full")
         (:view-atom-feed (values "/feed"))
-        (:view-comment-feed (cond (post-id (values "/comment-feed/~D" post-id))
+        (:view-comment-feed (cond (post-id (values "/~D/comment-feed" post-id))
                                   (t "/comment-feed")))
         (:view (cond (comment-id (values "/~D#comment-~D" post-id comment-id))
                      (post-id (values "/~D" post-id))
@@ -811,6 +811,8 @@
   (format t "~&Updating the news feeds...")
   (update-atom-feed)
   (update-comment-feed)
+  (format t "~&Updating the individual comment feeds...")
+  (update-comment-feeds-for-entries)
   (format t "~&Updating the site map...")
   (update-site-map))
 
@@ -830,8 +832,10 @@
 
 (defun update-journal-entry-page (entry)
   (with-slots (id title) entry
-     (let* ((file-name (format nil "~D.xhtml" id))
-            (file-path (merge-pathnames file-name *static-dir*)))
+     (let* ((file-name "index.xhtml")
+            (directory (merge-pathnames (make-pathname :directory (format nil "~D" id)) *static-dir*))
+            (file-path (merge-pathnames file-name directory)))
+       (ensure-directories-exist file-path)
        (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
          (with-yaclml-stream *standard-output*
            (let ((*mode* :file))
@@ -848,6 +852,20 @@
   (let ((file-path (merge-pathnames "comment-feed.xml" *static-dir*)))
     (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
       (let ((*mode* :file))
+        (show-comment-feed)))))
+
+(defun update-comment-feeds-for-entries ()
+  (dotimes (entry-id (+ (find-largest-post-id) 1))
+    (update-comment-feed-for-entry entryid)))
+
+(defun update-comment-feed-for-entry (entry-id)
+  (let* ((file-name "comment-feed.xml")
+         (directory (merge-pathnames (make-pathname :directory (format nil "~D" id)) *static-dir*))
+         (file-path (merge-pathnames file-name directory)))
+    (ensure-directories-exist file-path)
+    (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
+      (let ((*mode* :file)
+            (*post-number* entry-id))
         (show-comment-feed)))))
 
 (defun update-site-map ()
