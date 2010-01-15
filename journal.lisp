@@ -340,7 +340,7 @@
          (<:button :type "submit"
                    (<:as-is "Bearbeiten"))))
        " | "
-       (<:a :href (link-to :view-atom-feed :post-id id)
+       (<:a :href (link-to :view-comment-feed :post-id id :absolute t)
         (<:as-is
          (format nil "Kommentarfeed (Atom)" (length comments))))
        " | "
