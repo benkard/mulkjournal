@@ -95,7 +95,9 @@
                             ("href" ,(link-to :index :absolute t)))))
         (with-tag ("link" `(("rel" "self")
                             ("type" "application/atom+xml")
-                            ("href" ,(link-to :view-comment-feed :absolute t)))))
+                            ("href" ,(if *post-number*
+                                         (link-to :view-comment-feed :post-id *post-number* :absolute t)
+                                         (link-to :view-comment-feed :absolute t))))))
 
         (let ((number 0))
           (dolist (journal-comment (select 'journal-comment
