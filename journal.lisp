@@ -846,7 +846,8 @@
        (ensure-directories-exist file-path)
        (with-open-file (*standard-output* file-path :direction :output :if-exists :supersede)
          (with-yaclml-stream *standard-output*
-           (let ((*mode* :file))
+           (let ((*mode* :file)
+                 (*post-number* id))
              (with-web-journal (title :canonical-uri (link-to :view :post-id id :absolute t))
                (show-journal-entry entry :comments-p t))))))))
 
