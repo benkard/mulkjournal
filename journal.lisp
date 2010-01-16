@@ -480,7 +480,7 @@
             :href (link-to :view-comment-feed)
             :title "Kompottkins weiser Kommentarfeed")
     (when *post-number*
-      (let ((entry find-entry *post-number*))
+      (let ((entry (find-entry *post-number*)))
         (<:link :rel "replies"
                 :type "application/atom+xml"
                 :href (link-to :view-comment-feed :post-id *post-number* :absolute t)
