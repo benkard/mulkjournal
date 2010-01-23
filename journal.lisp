@@ -156,8 +156,9 @@
     (with-slots (title date body categories last-modification id)
                 journal-entry
        (with-tag ("entry")
-         (emit-simple-tags :title title
-                           :id (format nil "urn:uuid:~(~A~)"
+         (with-tag ("title" `(("type" "html")))
+           (xml-out title))
+         (emit-simple-tags :id (format nil "urn:uuid:~(~A~)"
                                        (uuid-of journal-entry))
                            :updated (atom-time (or last-modification date))
                            :published (atom-time date))
