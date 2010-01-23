@@ -157,7 +157,7 @@
                 journal-entry
        (with-tag ("entry")
          (with-tag ("title" `(("type" "html")))
-           (xml-out title))
+           (xml-as-is title))
          (emit-simple-tags :id (format nil "urn:uuid:~(~A~)"
                                        (uuid-of journal-entry))
                            :updated (atom-time (or last-modification date))
