@@ -34,6 +34,7 @@ html {
 #MAIN-TITLE {
   font-stretch: wider;
   font-variant: small-caps;
+  font-weight: bolder;
   text-align: center;
 }
 
