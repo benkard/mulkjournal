@@ -127,8 +127,7 @@
                      (with-tag ("content" `(("type" "xhtml")
                                             ("xml:lang" "de")
                                             ("xml:base" ,(link-to :index :absolute t))))
-                       (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")
-                                          ("xmlns:html" "http://www.w3.org/1999/xhtml")))
+                       (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
                          (xml-as-is
                           (with-yaclml-output-to-string
                             (<:as-html
@@ -187,8 +186,7 @@
            (with-tag ("content" `(("type" "xhtml")
                                   ("xml:lang" "de")
                                   ("xml:base" ,(link-to :index :absolute t))))
-             (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")
-                                ("xmlns:html" "http://www.w3.org/1999/xhtml")))
+             (with-tag ("div" '(("xmlns" "http://www.w3.org/1999/xhtml")))
                (xml-as-is (htmlise-entry journal-entry))))))))
   #.(restore-sql-reader-syntax-state))
 
@@ -303,15 +301,15 @@
              (format nil "~D&#160;Kommentar~:*~[e~;~:;e~]" (length comments)))))))
 
   (when *full-entry-view*
-    (<::html\:article :class :journal-entry
+    (<::article :class :journal-entry
      (<:h1 (<:a :href (link-to :view :post-id id)
             (<:as-is title)))
-     (<::html\:header :class :journal-entry-header
-      (<::html\:time :class :journal-entry-date
-                     :pubdate "pubdate"
-                     :datetime (format-date nil
-                                            "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
-                                            posting-date)
+     (<::header :class :journal-entry-header
+      (<::time :class :journal-entry-date
+             :pubdate "pubdate"
+             :datetime (format-date nil
+                                    "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
+                                    posting-date)
        (<:as-html
         (format-date nil "%@day-of-week%, den %day%.%mon%.%yr%, %hr%:%2min%."
                      posting-date)))
@@ -323,7 +321,7 @@
        (<:as-is (if (equal type "html")
                     body
                     (journal-markup->html body))))
-      (<::html\:footer :class :journal-entry-footer
+      (<::footer :class :journal-entry-footer
        (<:form :class :journal-entry-delete-button-form
                :style "display: inline;"
                :method "post"
