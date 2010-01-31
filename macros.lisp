@@ -32,18 +32,20 @@
   (emit-open-tag "html" #+clisp `(("dir" . ,dir)
                                   ("lang" . ,lang)
                                   ("xml:lang" . ,lang)
-                                  ("xmlns" . ,xmlns))
+                                  ("xmlns" . ,xmlns)
+                                  ("xmlns:html" . ,xmlns))
                         #-clisp `("dir" ,dir
                                   "lang" ,lang
                                   "xml:lang" ,lang
-                                  "xmlns" ,xmlns))
+                                  "xmlns" ,xmlns
+                                  "xmlns:html" ,xmlns))
   (emit-body body)
   (emit-close-tag "html"))
 
-(yaclml::def-html-tag <::article :core :i18n :event)
-(yaclml::def-html-tag <::header :core :i18n :event)
-(yaclml::def-html-tag <::footer :core :i18n :event)
-(yaclml::def-html-tag <::time :core :i18n :event pubdate datetime)
+(yaclml::def-html-tag <::html\:article :core :i18n :event)
+(yaclml::def-html-tag <::html\:header :core :i18n :event)
+(yaclml::def-html-tag <::html\:footer :core :i18n :event)
+(yaclml::def-html-tag <::html\:time :core :i18n :event pubdate datetime)
 
 
 (defmacro with-web-journal ((page-title &key canonical-uri) &body body)
