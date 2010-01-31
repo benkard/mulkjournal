@@ -336,7 +336,7 @@
                    :name "id"
                    :value (prin1-to-string id))
           (<:input :type "submit"
-                   :value "L&#246;schen")))
+                   :value "Löschen")))
         " | "
         (<:form :class :journal-entry-edit-button-form
                 :style "display: inline;"
@@ -432,7 +432,7 @@
                         :cols 40))))
          (<:div
           (<:input :type "submit"
-                   :value "Ver&#246;ffentlichen")))))))
+                   :value "Veröffentlichen")))))))
 
 
 (defun call-with-web-journal (page-title thunk &key canonical-uri)
@@ -731,7 +731,7 @@
                :name "body"
                :value body)
       (<:div
-       (<:input :type "submit" :value "Ver&#246;ffentlichen")))
+       (<:input :type "submit" :value "Veröffentlichen")))
     (show-journal-entry-with-components (or id -1)
                                         title
                                         body
