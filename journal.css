@@ -22,6 +22,9 @@
  *-----------------------------------------------------------------------
  */
 
+html {
+  font-family: Optima, Calibri, 'MgOpen Cosmetica', 'MgOpen Moderna', Candara, Palatino, 'Palatino Linotype', 'Book Antiqua', 'URW Palladio L', 'Gentium Alt', 'Gentium', Geneva, 'Trebuchet MS', Georgia, sans-serif;
+}
 
 #MAIN-TITLE {
   font-stretch: wider;
