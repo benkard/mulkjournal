@@ -577,9 +577,9 @@
              (<:caption (<:as-is "Eintr&#228;ge nach Datum"))
              (<:thead
               (<:tr
-               (<:th (<:as-is "Titel"))
-               (<:th (<:as-is "Datum"))
-               (<:th (<:as-is "Kommentare"))))
+               (<:th :scope "col" (<:as-is "Titel"))
+               (<:th :scope "col" (<:as-is "Datum"))
+               (<:th :scope "col" (<:as-is "Kommentare"))))
              (<:tbody
               (dolist (entry entries)
                 (let ((*full-entry-view* nil))
