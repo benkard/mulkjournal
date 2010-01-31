@@ -329,8 +329,8 @@
          (<:input :type "hidden"
                   :name "id"
                   :value (prin1-to-string id))
-         (<:button :type "submit"
-                   (<:as-is "L&#246;schen"))))
+         (<:input :type "submit"
+                  (<:as-is "L&#246;schen"))))
        " | "
        (<:form :class :journal-entry-edit-button-form
                :style "display: inline;"
@@ -340,8 +340,8 @@
          (<:input :type "hidden"
                   :name "id"
                   :value (prin1-to-string id))
-         (<:button :type "submit"
-                   (<:as-is "Bearbeiten"))))
+         (<:input :type "submit"
+                  (<:as-is "Bearbeiten"))))
        " | "
        (<:a :href (link-to :view-comment-feed :post-id id :absolute t)
         (<:as-is
@@ -425,7 +425,7 @@
                        :rows 10
                        :cols 40))))
         (<:div
-         (<:button :type "submit"
+         (<:input :type "submit"
           (<:as-is "Ver&#246;ffentlichen"))))))))
 
 
@@ -648,7 +648,7 @@
         (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of trackback)))
         (<:input :type "hidden" :name "type" :value "trackback")
         (<:input :type "hidden" :name "acceptp" :value "f")
-        (<:button :type "submit" (<:as-is "Verwerfen")))
+        (<:input :type "submit" (<:as-is "Verwerfen")))
       (<:form :action (link-to :moderation-page)
               :method "post"
               :accept-charset "UTF-8"
@@ -657,7 +657,7 @@
         (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of trackback)))
         (<:input :type "hidden" :name "type" :value "trackback")
         (<:input :type "hidden" :name "acceptp" :value "t")
-        (<:button :type "submit" (<:as-is "Annehmen")))
+        (<:input :type "submit" (<:as-is "Annehmen")))
       (<:div (<:as-html "Zu: ") (<:a :href (link-to :view :post-id (id-of (entry-of trackback)) :absolute t) (<:as-html (title-of (entry-of trackback)))))
       (show-trackback trackback))
     (<:h2 (<:as-html "Pingbacks"))
@@ -671,7 +671,7 @@
         (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of pingback)))
         (<:input :type "hidden" :name "type" :value "pingback")
         (<:input :type "hidden" :name "acceptp" :value "f")
-        (<:button :type "submit" (<:as-is "Verwerfen")))
+        (<:input :type "submit" (<:as-is "Verwerfen")))
       (<:form :action (link-to :moderation-page)
               :method "post"
               :accept-charset "UTF-8"
@@ -680,7 +680,7 @@
         (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of pingback)))
         (<:input :type "hidden" :name "type" :value "pingback")
         (<:input :type "hidden" :name "acceptp" :value "t")
-        (<:button :type "submit" (<:as-is "Annehmen")))
+        (<:input :type "submit" (<:as-is "Annehmen")))
       (<:div (<:as-html "Zu: ") (<:a :href (link-to :view :post-id (id-of (entry-of pingback)) :absolute t) (<:as-html (title-of (entry-of pingback)))))
       (show-pingback pingback))
     (<:h2 (<:as-html "Kommentare"))
@@ -694,7 +694,7 @@
         (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of comment)))
         (<:input :type "hidden" :name "type" :value "comment")
         (<:input :type "hidden" :name "acceptp" :value "f")
-        (<:button :type "submit" (<:as-is "Verwerfen")))
+        (<:input :type "submit" (<:as-is "Verwerfen")))
       (<:form :action (link-to :moderation-page)
               :method "post"
               :accept-charset "UTF-8"
@@ -703,7 +703,7 @@
         (<:input :type "hidden" :name "id" :value (prin1-to-string (id-of comment)))
         (<:input :type "hidden" :name "type" :value "comment")
         (<:input :type "hidden" :name "acceptp" :value "t")
-        (<:button :type "submit" (<:as-is "Annehmen")))
+        (<:input :type "submit" (<:as-is "Annehmen")))
       (<:div (<:as-html "Zu: ") (<:a :href (link-to :view :post-id (id-of (entry-of comment)) :absolute t) (<:as-html (title-of (entry-of comment)))))
       (show-comment comment)))
   #.(restore-sql-reader-syntax-state))
@@ -725,7 +725,7 @@
                :name "body"
                :value body)
       (<:div
-       (<:button :type "submit"
+       (<:input :type "submit"
         (<:as-is "Ver&#246;ffentlichen"))))
     (show-journal-entry-with-components (or id -1)
                                         title
@@ -769,7 +769,7 @@
                      :cols 65
            (<:as-html body)))))
       (<:div
-       (<:button :type "submit"
+       (<:input :type "submit"
         (<:as-is "Vorschau"))))))
 
 
