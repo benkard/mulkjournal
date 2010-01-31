@@ -23,6 +23,11 @@
  */
 
 html {
+  /* Epiphany chooses a sans-serif font for this because it recognises both
+     Calibri and Candara as requesting such a font even if neither of them
+     is installed.  Consequently, everything looks much nicer in Firefox, which
+     falls back to URW Palladio L, as it should.  Weird. */
+
   font-family: Optima, Calibri, 'MgOpen Cosmetica', 'MgOpen Moderna', Candara, Palatino, 'Palatino Linotype', 'Book Antiqua', 'URW Palladio L', 'Gentium Alt', 'Gentium', Geneva, 'Trebuchet MS', Georgia, sans-serif;
 }
 
