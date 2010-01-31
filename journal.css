@@ -48,12 +48,12 @@
   text-align: left;
 }
 
-.JOURNAL-ENTRY > h2 {
+.JOURNAL-ENTRY h1 {
   border-bottom: 2px solid #000;
   /* font-variant: small-caps; */
 }
 
-.JOURNAL-ENTRY > h2 > a {
+.JOURNAL-ENTRY h1 > a {
   text-decoration: none;
 }
 
