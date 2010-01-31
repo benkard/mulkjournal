@@ -301,74 +301,76 @@
              (format nil "~D&#160;Kommentar~:*~[e~;~:;e~]" (length comments)))))))
 
   (when *full-entry-view*
-    (<::article :class :journal-entry
-     (<:h1 (<:a :href (link-to :view :post-id id)
-            (<:as-is title)))
-     (<::header :class :journal-entry-header
-      (<::time :class :journal-entry-date
-             :pubdate "pubdate"
-             :datetime (format-date nil
-                                    "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
-                                    posting-date)
-       (<:as-html
-        (format-date nil "%@day-of-week%, den %day%.%mon%.%yr%, %hr%:%2min%."
-                     posting-date)))
-      (unless (null categories)
-        (<:span :class :journal-entry-category
-         (<:as-html
-          (format nil "Abgeheftet unter ...")))))
+    (<:div :class :journal-entry
+     (<::article
+      (<:h1 (<:a :href (link-to :view :post-id id) (<:as-is title)))
+      (<:div :class :journal-entry-header
+       (<::header
+        (<:span :class :journal-entry-date
+         (<::time :pubdate "pubdate"
+                  :datetime (format-date nil
+                                         "%4yr%-%2mon%-%2day%T%2hr%:%2min%:%2sec%Z"
+                                         posting-date)
+          (<:as-html
+           (format-date nil "%@day-of-week%, den %day%.%mon%.%yr%, %hr%:%2min%."
+                        posting-date))))
+       (unless (null categories)
+         (<:span :class :journal-entry-category
+          (<:as-html
+           (format nil "Abgeheftet unter ..."))))))
       (<:div :class :journal-entry-body
        (<:as-is (if (equal type "html")
                     body
                     (journal-markup->html body))))
-      (<::footer :class :journal-entry-footer
-       (<:form :class :journal-entry-delete-button-form
-               :style "display: inline;"
-               :method "post"
-               :action (link-to :index)
-        (<:div :style "display: inline;"
-         (<:input :type "hidden"
-                  :name "action"
-                  :value "delete")
-         (<:input :type "hidden"
-                  :name "id"
-                  :value (prin1-to-string id))
-         (<:input :type "submit"
-                  (<:as-is "L&#246;schen"))))
-       " | "
-       (<:form :class :journal-entry-edit-button-form
-               :style "display: inline;"
-               :method "get"
-               :action (link-to :edit :post-id id)
-        (<:div :style "display: inline;"
-         (<:input :type "hidden"
-                  :name "id"
-                  :value (prin1-to-string id))
-         (<:input :type "submit"
-                  (<:as-is "Bearbeiten"))))
-       " | "
-       (<:a :href (link-to :view-comment-feed :post-id id :absolute t)
-        (<:as-is
-         (format nil "Kommentarfeed (Atom)" (length comments))))
-       " | "
-       (<:a :href (link-to :view :post-id id)
-        (<:as-is
-         (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments))))))
+      (<:div :class :journal-entry-footer
+       (<::footer
+        (<:form :class :journal-entry-delete-button-form
+                :style "display: inline;"
+                :method "post"
+                :action (link-to :index)
+         (<:div :style "display: inline;"
+          (<:input :type "hidden"
+                   :name "action"
+                   :value "delete")
+          (<:input :type "hidden"
+                   :name "id"
+                   :value (prin1-to-string id))
+          (<:input :type "submit"
+                   (<:as-is "L&#246;schen"))))
+        " | "
+        (<:form :class :journal-entry-edit-button-form
+                :style "display: inline;"
+                :method "get"
+                :action (link-to :edit :post-id id)
+         (<:div :style "display: inline;"
+          (<:input :type "hidden"
+                   :name "id"
+                   :value (prin1-to-string id))
+          (<:input :type "submit"
+                   (<:as-is "Bearbeiten"))))
+        " | "
+        (<:a :href (link-to :view-comment-feed :post-id id :absolute t)
+         (<:as-is
+          (format nil "Kommentarfeed (Atom)" (length comments))))
+        " | "
+        (<:a :href (link-to :view :post-id id)
+         (<:as-is
+          (format nil "~D Kommentar~:*~[e~;~:;e~]" (length comments))))))))
 
-    (when (and comments-p (not (null comments)))
-      (<:div :class :journal-comments
-       (<:h2 "Kommentare")
-       (dolist (comment comments)
-         (show-comment comment))))
+     (when (and comments-p (not (null comments)))
+       (<:div :class :journal-comments
+        (<:h2 "Kommentare")
+        (dolist (comment comments)
+          (show-comment comment))))
 
-    (when (and comments-p (not (null trackbacks)))
-      (<:div :class :journal-comments
-       (<:h2 "Trackbacks")
-       (dolist (trackback trackbacks)
-         (show-trackback trackback))))
+     (when (and comments-p (not (null trackbacks)))
+       (<:div :class :journal-comments
+        (<:h2 "Trackbacks")
+        (dolist (trackback trackbacks)
+          (show-trackback trackback))))
 
-    (when comments-p
-      (<:as-is (format nil "<!--
+     (when comments-p
+       (<:as-is (format nil "<!--
     <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"
              xmlns:dc=\"http://purl.org/dc/elements/1.1/\"
              xmlns:trackback=\"http://madskills.com/public/xml/rss/module/trackback/\">
@@ -379,58 +381,58 @@
         trackback:ping=\"~A\" />
     </rdf:RDF>
 -->" (link-to :view :post-id id :absolute t) (ppcre:regex-replace "--" title "&#8212;") (link-to :trackback :post-id id :absolute t)))
-      (<:div :class :journal-new-comment
-       (<:h2 "Neuen Kommentar schreiben")
-       (<:p (<:as-is "Bitte beachten Sie, da&#223; E-Mail-Adressen niemals
-                      ver&#246;ffentlicht werden und nur von Matthias eingesehen
-                      werden k&#246;nnen."))
-       (<:p (<:strong "Hinweise: ")
-            "Diese Website verwendet "
-            (<:a :href "http://akismet.com/" "Akismet")
-            " zur Spamerkennung. "
-            (<:as-is "E-Mail-Adressen werden auch gegen&#252;ber Akismet
-                      unter Verschlu&#223; gehalten.  Nur unformatierter
-                      Text ist erlaubt.  Leerzeilen trennen
-                      Abs&#228;tze."))
-       (<:form :action (link-to :view :post-id id)
-               :method "post"
-               :accept-charset #+(or) "ISO-10646-UTF-1"
-                               "UTF-8"
-               :enctype #+(or) "multipart/form-data"
-                        "application/x-www-form-urlencoded"
-        (<:div :style "display: none"
-         (<:input :type "hidden"
-                  :name "id"
-                  :value (prin1-to-string id))
-         (<:input :type "hidden"
-                  :name "action"
-                  :value "post-comment"))
-        (<:div :style "display: table"
-         (loop for (name . desc) in '(("author" . "Name (n&#246;tig)")
-                                      ("email" . "E-Mail")
-                                      ("website" . "Website"))
-               do (<:div :style "display: table-row"
-                   (<:div :style "display: table-cell; vertical-align: top"
-                    (<:label :for name
-                             :style "vertical-align: top"
-                     (<:as-is (format nil "~A: " desc))))
-                   (<:div :style "display: table-cell;"
-                    (<:input :type "text"
-                             :name name
-                             :id name))))
-         (<:div :style "display: table-row"
-          (<:div :style "display: table-cell; vertical-align: top"
-           (<:label :for "comment-body"
-                    :style "vertical-align: top"
-            (<:as-html "Kommentar: ")))
-          (<:div :style "display: table-cell"
-           (<:textarea :name "comment-body"
-                       :id "comment-body"
-                       :rows 10
-                       :cols 40))))
-        (<:div
-         (<:input :type "submit"
-          (<:as-is "Ver&#246;ffentlichen"))))))))
+       (<:div :class :journal-new-comment
+        (<:h2 "Neuen Kommentar schreiben")
+        (<:p (<:as-is "Bitte beachten Sie, da&#223; E-Mail-Adressen niemals
+                       ver&#246;ffentlicht werden und nur von Matthias eingesehen
+                       werden k&#246;nnen."))
+        (<:p (<:strong "Hinweise: ")
+             "Diese Website verwendet "
+             (<:a :href "http://akismet.com/" "Akismet")
+             " zur Spamerkennung. "
+             (<:as-is "E-Mail-Adressen werden auch gegen&#252;ber Akismet
+                       unter Verschlu&#223; gehalten.  Nur unformatierter
+                       Text ist erlaubt.  Leerzeilen trennen
+                       Abs&#228;tze."))
+        (<:form :action (link-to :view :post-id id)
+                :method "post"
+                :accept-charset #+(or) "ISO-10646-UTF-1"
+                                "UTF-8"
+                :enctype #+(or) "multipart/form-data"
+                         "application/x-www-form-urlencoded"
+         (<:div :style "display: none"
+          (<:input :type "hidden"
+                   :name "id"
+                   :value (prin1-to-string id))
+          (<:input :type "hidden"
+                   :name "action"
+                   :value "post-comment"))
+         (<:div :style "display: table"
+          (loop for (name . desc) in '(("author" . "Name (n&#246;tig)")
+                                       ("email" . "E-Mail")
+                                       ("website" . "Website"))
+                do (<:div :style "display: table-row"
+                    (<:div :style "display: table-cell; vertical-align: top"
+                     (<:label :for name
+                              :style "vertical-align: top"
+                      (<:as-is (format nil "~A: " desc))))
+                    (<:div :style "display: table-cell;"
+                     (<:input :type "text"
+                              :name name
+                              :id name))))
+          (<:div :style "display: table-row"
+           (<:div :style "display: table-cell; vertical-align: top"
+            (<:label :for "comment-body"
+                     :style "vertical-align: top"
+             (<:as-html "Kommentar: ")))
+           (<:div :style "display: table-cell"
+            (<:textarea :name "comment-body"
+                        :id "comment-body"
+                        :rows 10
+                        :cols 40))))
+         (<:div
+          (<:input :type "submit"
+           (<:as-is "Ver&#246;ffentlichen"))))))))
 
 
 (defun call-with-web-journal (page-title thunk &key canonical-uri)
