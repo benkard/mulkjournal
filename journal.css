@@ -50,11 +50,23 @@
 
 .JOURNAL-ENTRY h1 {
   border-bottom: 2px solid #000;
-  /* font-variant: small-caps; */
+  font-size: 1.6em;
 }
 
 .JOURNAL-ENTRY h1 > a {
   text-decoration: none;
+}
+
+.JOURNAL-ENTRY h2 {
+  font-size: 1.15em;
+}
+
+.JOURNAL-ENTRY h3 {
+  font-size: 1em;
+}
+
+.JOURNAL-ENTRY h4 {
+  font-size: 0.9em;
 }
 
 .JOURNAL-ENTRY {
