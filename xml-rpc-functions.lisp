@@ -22,8 +22,10 @@
 
 (in-package #:mulk.journal)
 
-#.(setf *readtable* (copy-readtable))
-#.(setf (readtable-case *readtable*) :invert)
+#.(progn
+    (setf *readtable* (copy-readtable))
+    (setf (readtable-case *readtable*) :invert)
+    nil)
 
 (defun mulk.journal.xml-rpc::metaWeblog.newPost (blogid username password struct publish)
   (declare (ignore blogid username publish))
